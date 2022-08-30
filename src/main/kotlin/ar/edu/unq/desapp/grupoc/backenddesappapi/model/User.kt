@@ -1,7 +1,15 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-class User(email: String) {
-    val EMAIL_REGEX = "^[A-Za-z](.*)(@)(.+)(\\.)(.+)"
+class User(
+    email: String,
+    name: String,
+    surname: String,
+    address: String,
+    password: String,
+    cvu: String,
+    walletAddress: String
+) {
+    private val EMAIL_REGEX = "^[A-Za-z](.*)(@)(.+)(\\.)(.+)"
 
     lateinit var email: String
 
