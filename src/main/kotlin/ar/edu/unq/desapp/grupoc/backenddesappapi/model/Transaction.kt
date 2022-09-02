@@ -15,7 +15,7 @@ class Transaction(val firstUser: String, var status: TransactionStatus, val oper
 
     private fun validateCompatibleIntents(secondUserIntent: OperationType) {
         if (secondUserIntent == operationType) {
-            throw RuntimeException("Cannot process a transaction where both users intents is $operationType")
+            throw RuntimeException("Cannot process a transaction where both user intents is $operationType")
         }
     }
 
