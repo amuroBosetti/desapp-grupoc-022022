@@ -5,8 +5,8 @@ import java.util.*
 class Broker {
     private val transactions: MutableList<Transaction> = mutableListOf()
 
-    fun expressOperationIntent(user: String): Transaction {
-        val transaction = Transaction(user, TransactionStatus.ACTIVE)
+    fun expressOperationIntent(user: String, operationType: OperationType): Transaction {
+        val transaction = Transaction(user, TransactionStatus.ACTIVE, operationType)
         transactions.add(transaction)
         return transaction
     }
@@ -19,8 +19,8 @@ class Broker {
         return transactions.filter { transaction -> transaction.status == TransactionStatus.PENDING }
     }
 
-    fun processTransaction(transactionId: UUID, user: String) {
-        transactions.find { transaction -> transaction.id == transactionId}!!.process(user)
+    fun processTransaction(transactionId: UUID, user: String, operationType: OperationType) {
+        transactions.find { transaction -> transaction.id == transactionId}!!.process(user, operationType)
     }
 
 }

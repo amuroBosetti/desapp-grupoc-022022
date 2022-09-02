@@ -11,7 +11,7 @@ val userRegistry: UserRegistry = UserRegistry()
 class UserTest {
 
     @Test
-    fun `cuando un usuario es registrado exitosamente, luego puede ser encontrado en el registro de usuarios`() {
+    fun `when a user has been registered successfully, then they can be found in the user registry`() {
         val email = "user@unq.edu.ar"
         val user = User(email, "Pepe", "Argento", "Calle falsa 123", "Abcdef!", "8340632811100092378329", "12345678")
 
@@ -22,7 +22,7 @@ class UserTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["usuario", "usuario@un", "usuario@unq", "" ])
-    fun `cuando un usuario es registrado con un formato de email invalido, luego se levanta una excepcion`(invalidEmail : String) {
+    fun `when a user tries to register with an invalid email format, then it fails`(invalidEmail : String) {
         assertThatThrownBy { User(
             invalidEmail,
             "Pepe",
