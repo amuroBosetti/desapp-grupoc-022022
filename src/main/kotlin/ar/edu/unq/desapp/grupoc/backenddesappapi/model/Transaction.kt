@@ -19,4 +19,8 @@ class Transaction(val firstUser: String, var status: TransactionStatus, val oper
         }
     }
 
+    public fun isPending(): Boolean {
+        return this.status == TransactionStatus.PENDING
+    }
+
 }

@@ -14,6 +14,10 @@ class BrokerTest {
     private val user = "pepito@gmail.com"
     private val anotherUser = "fulanito@gmail.com"
     private lateinit var broker: Broker
+    private val intendedPrice = 1.01
+    private val higherIntendedPrice = 2.05
+    private val lowerIntendedPrice = 0.95
+    private val cryptoSymbol = "ALICEUSDT"
 
     @BeforeEach
     internal fun setUp() {
@@ -23,17 +27,31 @@ class BrokerTest {
     @ParameterizedTest
     @EnumSource(OperationType::class)
     fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType) {
-        broker.expressOperationIntent(user, operationType)
+        broker.expressOperationIntent(user, operationType, intendedPrice, cryptoSymbol)
 
         assertThat(broker.findActiveTransactionsOf(user).first().firstUser).isEqualTo(user)
     }
 
     @Test
-    fun `when two users express their intent, then they only have one active transaction each`() {
-        broker.expressOperationIntent(user, OperationType.BUY)
-        broker.expressOperationIntent(anotherUser, OperationType.BUY)
+    fun `when two users express a buying intent, then they only have one active transaction each`() {
+        broker.expressOperationIntent(user, OperationType.BUY, intendedPrice, cryptoSymbol)
+        broker.expressOperationIntent(anotherUser, OperationType.BUY, intendedPrice, cryptoSymbol)
 
         assertThat(broker.findActiveTransactionsOf(anotherUser).first().firstUser).isEqualTo(anotherUser)
+    }
+
+    @Test
+    fun `when a user tries to express a buying intent with a price 5% higher than the latest quotation then an exception is thrown`(){
+
+        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, higherIntendedPrice, cryptoSymbol) }
+                .isInstanceOf(RuntimeException::class.java)
+                .hasMessage("Cannot express a transaction intent with a price 5 higher than the latest quotation")
+    }
+
+    @Test
+    fun `when a user expresses a buying intent with a price within the 5% price range then there is an active transaction `(){
+
+
     }
 
     @ParameterizedTest
@@ -46,13 +64,13 @@ class BrokerTest {
     }
 
     @Nested
-    @DisplayName("given a user who has expressed their buy intent")
+    @DisplayName("given a user who has expressed their buying intent")
     inner class BuyOperationTypeAlreadyExpressed {
         private lateinit var transaction: Transaction
 
         @BeforeEach
         fun setUp() {
-            transaction = broker.expressOperationIntent(user, OperationType.BUY)
+            transaction = broker.expressOperationIntent(user, OperationType.BUY, intendedPrice, cryptoSymbol)
         }
 
         @Test
