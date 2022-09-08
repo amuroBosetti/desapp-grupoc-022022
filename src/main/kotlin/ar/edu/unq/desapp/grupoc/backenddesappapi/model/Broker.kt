@@ -1,11 +1,11 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import java.lang.Math.abs
 import java.util.*
 
 
-class Broker {
+class Broker(val quotations: HashMap<String, Double>, var percentage: Int) {
     private val transactions: MutableList<Transaction> = mutableListOf()
-    private val percentage = 5
 
     fun expressOperationIntent(user: String, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
@@ -25,14 +25,12 @@ class Broker {
     }
 
     private fun latestQuotation(cryptoSymbol: String): Double? {
-        val quotations : HashMap<String, Double> = HashMap<String, Double>()
-        quotations.put("ALICEUSDT",1.01)
         return quotations[cryptoSymbol]
     }
 
     private fun priceDifferenceIsHigherThan(percentage: Int, intendedPrice: Double, latestPrice: Double): Boolean {
         val priceDifference = intendedPrice - latestPrice
-        val percentageDifference = (priceDifference / latestPrice) * 100
+        val percentageDifference = (abs(priceDifference) / latestPrice) * 100
         return percentageDifference > percentage
     }
 

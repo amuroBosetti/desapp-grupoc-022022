@@ -8,20 +8,23 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.util.HashMap
 
 class BrokerTest {
 
     private val user = "pepito@gmail.com"
     private val anotherUser = "fulanito@gmail.com"
     private lateinit var broker: Broker
-    private val intendedPrice = 1.01
-    private val higherIntendedPrice = 2.05
+    private val intendedPrice = 1.00
+    private val higherIntendedPrice = 1.05
     private val lowerIntendedPrice = 0.95
     private val cryptoSymbol = "ALICEUSDT"
-
+    private val quotations = HashMap<String, Double>()
+    private val percentage : Int = 5
     @BeforeEach
     internal fun setUp() {
-        broker = Broker()
+        quotations.put("ALICEUSDT",intendedPrice)
+        broker = Broker(quotations,percentage)
     }
 
     @ParameterizedTest
@@ -46,6 +49,14 @@ class BrokerTest {
         assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, higherIntendedPrice, cryptoSymbol) }
                 .isInstanceOf(RuntimeException::class.java)
                 .hasMessage("Cannot express a transaction intent with a price 5 higher than the latest quotation")
+    }
+
+    @Test
+    fun `when a user tries to express a buying intent with a price 5% lower than the latest quotation then an exception is thrown`(){
+
+        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, lowerIntendedPrice, cryptoSymbol) }
+            .isInstanceOf(RuntimeException::class.java)
+            .hasMessage("Cannot express a transaction intent with a price 5 lower than the latest quotation")
     }
 
     @Test
