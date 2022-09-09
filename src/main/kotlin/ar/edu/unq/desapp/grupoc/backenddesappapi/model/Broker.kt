@@ -4,7 +4,7 @@ import java.lang.Math.abs
 import java.util.*
 
 
-class Broker(val quotations: HashMap<String, Double>, var percentage: Int) {
+class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
     private val transactions: MutableList<Transaction> = mutableListOf()
 
     fun expressOperationIntent(user: String, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
@@ -25,6 +25,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Int) {
     fun processTransaction(transactionId: UUID, user: String, operationType: OperationType, latestQuotation: Double) {
         val transaction = findTransactionById(transactionId)
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
+            transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
         } else {
             transaction.process(user, operationType, latestQuotation)
@@ -57,7 +58,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Int) {
         return quotations[cryptoSymbol]
     }
 
-    private fun priceDifferenceIsHigherThan(percentage: Int, intendedPrice: Double, latestPrice: Double): Boolean {
+    private fun priceDifferenceIsHigherThan(percentage: Double, intendedPrice: Double, latestPrice: Double): Boolean {
         val priceDifference = intendedPrice - latestPrice
         val percentageDifference = (abs(priceDifference) / latestPrice) * 100
         return percentageDifference > percentage

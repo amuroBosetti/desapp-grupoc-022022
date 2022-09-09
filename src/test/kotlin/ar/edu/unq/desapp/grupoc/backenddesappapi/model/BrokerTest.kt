@@ -3,7 +3,6 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -21,7 +20,7 @@ class BrokerTest {
     private val lowerIntendedPrice = 0.95
     private val cryptoSymbol = "ALICEUSDT"
     private val quotations = HashMap<String, Double>()
-    private val percentage : Int = 5
+    private val percentage : Double = 5.00
     @BeforeEach
     internal fun setUp() {
         quotations.put("ALICEUSDT",aPrice)
@@ -95,7 +94,6 @@ class BrokerTest {
         }
 
         @Test
-        @Disabled
         fun `when another user intending to sell accepts the transaction but the most recent quotation is outside price band, then an exception is thrown and the operation is cancelled`() {
             val priceVariationLimit = transaction.intendedPrice * (percentage / 100) + 0.01
             val quotationOutsidePriceBand = transaction.intendedPrice + priceVariationLimit
@@ -106,7 +104,7 @@ class BrokerTest {
                 .isInstanceOf(RuntimeException::class.java)
                 .hasMessage("Cannot process transaction, latest quotation is outside price band")
 
-            val processedTransaction = broker.pendingTransactions().first()
+            val processedTransaction = broker.findTransactionsOf(user).first()
             assertThat(processedTransaction.status).isEqualTo(TransactionStatus.CANCELLED)
         }
 
