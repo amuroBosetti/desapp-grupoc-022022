@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.HashMap
 
 class BrokerTest {
@@ -35,10 +36,11 @@ class BrokerTest {
         assertThat(broker.findTransactionsOf(user).first().firstUser).isEqualTo(user)
     }
 
-    @Test
-    fun `when two users express a buying intent, then they only have one active transaction each`() {
-        broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
-        broker.expressOperationIntent(anotherUser, OperationType.BUY, aPrice, cryptoSymbol)
+    @ParameterizedTest
+    @EnumSource(OperationType::class)
+    fun `when two users express an intent, then they only have one active transaction each`(operationType: OperationType) {
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
+        broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol)
 
         assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).isEqualTo(anotherUser)
     }
@@ -93,10 +95,13 @@ class BrokerTest {
             assertThat(processedTransaction.quotation).isEqualTo(quotation)
         }
 
-        @Test
-        fun `when another user intending to sell accepts the transaction but the most recent quotation is outside price band, then an exception is thrown and the operation is cancelled`() {
-            val priceVariationLimit = transaction.intendedPrice * (percentage / 100) + 0.01
-            val quotationOutsidePriceBand = transaction.intendedPrice + priceVariationLimit
+        @ParameterizedTest
+        @ValueSource(doubles = [ 1.0, -1.0])
+        fun `when another user intending to sell accepts the transaction but the most recent quotation is outside price band, then an exception is thrown and the operation is cancelled`(
+            oppositeModifier: Double
+        ) {
+            val priceVariationLimit = valueHigherThanPercentage(transaction.intendedPrice, percentage)
+            val quotationOutsidePriceBand = transaction.intendedPrice + (priceVariationLimit * oppositeModifier)
 
             assertThatThrownBy {
                 broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, quotationOutsidePriceBand)
@@ -151,6 +156,8 @@ class BrokerTest {
         }
     }
 
+    private fun valueHigherThanPercentage(percentage: Double, originalValue: Double) =
+        originalValue * (percentage / 100) + 0.01
 
 
 }
