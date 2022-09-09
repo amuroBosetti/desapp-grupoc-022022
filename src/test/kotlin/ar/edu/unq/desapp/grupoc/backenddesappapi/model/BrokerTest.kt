@@ -3,6 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -15,7 +16,7 @@ class BrokerTest {
     private val user = "pepito@gmail.com"
     private val anotherUser = "fulanito@gmail.com"
     private lateinit var broker: Broker
-    private val intendedPrice = 1.00
+    private val aPrice = 1.00
     private val higherIntendedPrice = 1.05
     private val lowerIntendedPrice = 0.95
     private val cryptoSymbol = "ALICEUSDT"
@@ -23,24 +24,24 @@ class BrokerTest {
     private val percentage : Int = 5
     @BeforeEach
     internal fun setUp() {
-        quotations.put("ALICEUSDT",intendedPrice)
+        quotations.put("ALICEUSDT",aPrice)
         broker = Broker(quotations,percentage)
     }
 
     @ParameterizedTest
     @EnumSource(OperationType::class)
     fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType) {
-        broker.expressOperationIntent(user, operationType, intendedPrice, cryptoSymbol)
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
 
-        assertThat(broker.findActiveTransactionsOf(user).first().firstUser).isEqualTo(user)
+        assertThat(broker.findTransactionsOf(user).first().firstUser).isEqualTo(user)
     }
 
     @Test
     fun `when two users express a buying intent, then they only have one active transaction each`() {
-        broker.expressOperationIntent(user, OperationType.BUY, intendedPrice, cryptoSymbol)
-        broker.expressOperationIntent(anotherUser, OperationType.BUY, intendedPrice, cryptoSymbol)
+        broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
+        broker.expressOperationIntent(anotherUser, OperationType.BUY, aPrice, cryptoSymbol)
 
-        assertThat(broker.findActiveTransactionsOf(anotherUser).first().firstUser).isEqualTo(anotherUser)
+        assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).isEqualTo(anotherUser)
     }
 
     @Test
@@ -65,15 +66,6 @@ class BrokerTest {
 
     }
 
-    @ParameterizedTest
-    @EnumSource(OperationType::class)
-    fun `a user cannot express an intent if the price is outside the latest quotation price band`(operationType : OperationType) {
-//        broker.expressOperationIntent(user, operationType, parametro de cotizacion, parametro de codigo de crypto?)
-//
-//        assertThat(broker.findActiveTransactionsOf(user).first().firstUser).isEqualTo(user)
-        //TODO
-    }
-
     @Nested
     @DisplayName("given a user who has expressed their buying intent")
     inner class BuyOperationTypeAlreadyExpressed {
@@ -81,12 +73,12 @@ class BrokerTest {
 
         @BeforeEach
         fun setUp() {
-            transaction = broker.expressOperationIntent(user, OperationType.BUY, intendedPrice, cryptoSymbol)
+            transaction = broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
         }
 
         @Test
         fun `when another user intending to sell accepts the transaction, then that transaction is in status pending`() {
-            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL)
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
 
             val processedTransaction = broker.pendingTransactions().first()
             assertThat(processedTransaction.secondUser).isEqualTo(anotherUser)
@@ -94,16 +86,71 @@ class BrokerTest {
         }
 
         @Test
+        fun `when another user intending to sell accepts the transaction, then that transaction uses the most recent quotation`() {
+            val quotation = 1.05
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, quotation)
+
+            val processedTransaction = broker.pendingTransactions().first()
+            assertThat(processedTransaction.quotation).isEqualTo(quotation)
+        }
+
+        @Test
+        @Disabled
+        fun `when another user intending to sell accepts the transaction but the most recent quotation is outside price band, then an exception is thrown and the operation is cancelled`() {
+            val priceVariationLimit = transaction.intendedPrice * (percentage / 100) + 0.01
+            val quotationOutsidePriceBand = transaction.intendedPrice + priceVariationLimit
+
+            assertThatThrownBy {
+                broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, quotationOutsidePriceBand)
+            }
+                .isInstanceOf(RuntimeException::class.java)
+                .hasMessage("Cannot process transaction, latest quotation is outside price band")
+
+            val processedTransaction = broker.pendingTransactions().first()
+            assertThat(processedTransaction.status).isEqualTo(TransactionStatus.CANCELLED)
+        }
+
+        @Test
         fun `when another user accepts the transaction but they also intend to buy, an exception is thrown and the transaction is not proccesed`() {
-            assertThatThrownBy { broker.processTransaction(transaction.id, anotherUser, OperationType.BUY) }
+            assertThatThrownBy { broker.processTransaction(transaction.id, anotherUser, OperationType.BUY, aPrice) }
                 .isInstanceOf(RuntimeException::class.java)
                 .hasMessage("Cannot process a transaction where both user intents is BUY")
 
-            val transaction = broker.findActiveTransactionsOf(user).first()
+            val transaction = broker.findTransactionsOf(user).first()
             assertThat(transaction.secondUser).isNull()
             assertThat(transaction.status).isEqualTo(TransactionStatus.ACTIVE)
         }
 
+        @Test
+        fun `when another user accepts the transaction and informs transfer has been completed, then the transaction is waiting confirmation`() {
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
+
+            broker.informTransfer(transaction.id)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
+        }
+
+        @Test
+        fun `when another user accepts the transaction and informs transfer, then the receiving user can confirm the reception`() {
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
+            broker.informTransfer(transaction.id)
+
+            broker.confirmReception(transaction.id)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.COMPLETED)
+        }
+
+        @Test
+        fun `when another user accepts the transaction but the original cancels it, then the transaction is cancelled`() {
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
+
+            broker.cancelTransaction(transaction.id)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.CANCELLED)
+        }
     }
 
 
