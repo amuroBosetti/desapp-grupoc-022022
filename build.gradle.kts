@@ -7,6 +7,7 @@ plugins {
 	kotlin("jvm") version "1.6.21"
 	kotlin("plugin.spring") version "1.6.21"
 	kotlin("plugin.jpa") version "1.6.21"
+	id("org.sonarqube") version "3.4.0.2513"
 }
 
 group = "ar.edu.unq.desapp.grupoc"
@@ -42,3 +43,13 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// SonarQube Extension for code analysis in CI
+sonarqube {
+	properties {
+		property("sonar.projectKey", "amuroBosetti_desapp-grupoc-022022")
+		property("sonar.organization", "amurobosetti")
+		property("sonar.host.url", "https://sonarcloud.io")
+	}
+}
+
