@@ -50,6 +50,13 @@ tasks.test {
 }
 tasks.jacocoTestReport {
 	dependsOn(tasks.test) // tests are required to run before generating the report
+	reports {
+		xml.required.set(true)
+		xml.outputLocation.set(File("${projectDir}/reports/jacocoXml"))
+	}
+}
+tasks.sonarqube {
+	dependsOn(tasks.jacocoTestReport)
 }
 
 // SonarQube Extension for code analysis in CI
