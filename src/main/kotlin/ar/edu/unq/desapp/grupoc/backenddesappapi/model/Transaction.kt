@@ -4,18 +4,18 @@ import java.util.UUID
 
 class Transaction(
     val firstUser: String,
-    var status: TransactionStatus,
     val operationType: OperationType,
     val intendedPrice: Double
 ) {
 
     var secondUser: String? = null
     var quotation: Double? = null
+    var status: TransactionStatus = TransactionStatus.ACTIVE
     val id: UUID = UUID.randomUUID()
 
-    fun process(secondUser: String, secondUserIntent: OperationType, latestQuotation: Double) {
+    fun accept(secondUser: String, secondUserIntent: OperationType, latestQuotation: Double) {
         validateCompatibleIntents(secondUserIntent)
-        status = TransactionStatus.PENDING
+        status = status.accept()
         this.secondUser = secondUser
         this.quotation = latestQuotation
     }
@@ -31,11 +31,11 @@ class Transaction(
     }
 
     fun informTransfer() {
-        this.status = TransactionStatus.WAITING_CONFIRMATION
+        this.status = this.status.informTransfer()
     }
 
     fun confirmReception() {
-        this.status = TransactionStatus.COMPLETED
+        this.status = this.status.confirmReception()
     }
 
     fun cancel() {

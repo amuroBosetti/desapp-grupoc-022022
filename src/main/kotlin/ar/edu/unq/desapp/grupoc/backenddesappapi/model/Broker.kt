@@ -9,7 +9,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
 
     fun expressOperationIntent(user: String, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
-        val transaction = Transaction(user, TransactionStatus.ACTIVE, operationType, intendedPrice)
+        val transaction = Transaction(user, operationType, intendedPrice)
         transactions.add(transaction)
         return transaction
     }
@@ -28,7 +28,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
             transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
         } else {
-            transaction.process(user, operationType, latestQuotation)
+            transaction.accept(user, operationType, latestQuotation)
         }
     }
 
