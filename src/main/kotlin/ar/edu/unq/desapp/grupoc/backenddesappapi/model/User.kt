@@ -9,6 +9,8 @@ class User(
     cvu: String,
     walletAddress: String
 ) {
+    private var reputationPoints: Double = 0.0
+
     private val EMAIL_REGEX = "^[A-Za-z](.*)(@)(.+)(\\.)(.+)"
 
     lateinit var email: String
@@ -21,5 +23,13 @@ class User(
         if (!EMAIL_REGEX.toRegex().matches(email)){
             throw RuntimeException("Invalid email")
         }
+    }
+
+    fun getReputationPoints(): Double {
+        return reputationPoints
+    }
+
+    fun increaseReputationPoints(amount: Double) {
+        reputationPoints += amount
     }
 }

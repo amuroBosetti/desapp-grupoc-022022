@@ -13,8 +13,8 @@ import java.util.HashMap
 
 class BrokerTest {
 
-    private val user = "pepito@gmail.com"
-    private val anotherUser = "fulanito@gmail.com"
+    private val user = UserFixture.aUser()
+    private val anotherUser = UserFixture.aUser("pepito@gmail.com")
     private lateinit var broker: Broker
     private val aPrice = 1.00
     private val higherIntendedPrice = 1.05
@@ -153,6 +153,20 @@ class BrokerTest {
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.CANCELLED)
+        }
+
+        @Test
+        fun `when a transaction goes from creation to completion in a certain timeframe, then both users get reputation points`() {
+            val reputationPointsBeforeTransaction = user.getReputationPoints()
+            completeTransaction()
+
+            assertThat(user.getReputationPoints()).isEqualTo(reputationPointsBeforeTransaction + 10.0)
+        }
+
+        private fun completeTransaction() {
+            broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
+            broker.informTransfer(transaction.id)
+            broker.confirmReception(transaction.id)
         }
     }
 

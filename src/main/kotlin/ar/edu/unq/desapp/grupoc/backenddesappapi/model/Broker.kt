@@ -5,16 +5,17 @@ import java.util.*
 
 
 class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
+    private val scoreTracker: ScoreTracker = ScoreTracker()
     private val transactions: MutableList<Transaction> = mutableListOf()
 
-    fun expressOperationIntent(user: String, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
+    fun expressOperationIntent(user: User, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         val transaction = Transaction(user, operationType, intendedPrice)
         transactions.add(transaction)
         return transaction
     }
 
-    fun findTransactionsOf(user: String): List<Transaction> {
+    fun findTransactionsOf(user: User): List<Transaction> {
         return transactions.filter { transaction -> transaction.firstUser == user }
     }
 
@@ -22,13 +23,13 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
         return transactions.filter { transaction -> transaction.isPending() }
     }
 
-    fun processTransaction(transactionId: UUID, user: String, operationType: OperationType, latestQuotation: Double) {
+    fun processTransaction(transactionId: UUID, acceptingUser: User, operationType: OperationType, latestQuotation: Double) {
         val transaction = findTransactionById(transactionId)
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
         } else {
-            transaction.accept(user, operationType, latestQuotation)
+            transaction.accept(acceptingUser, operationType, latestQuotation)
         }
     }
 
@@ -37,7 +38,9 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
     }
 
     fun confirmReception(transactionId: UUID) {
-        findTransactionById(transactionId).confirmReception()
+        val transaction = findTransactionById(transactionId)
+        transaction.confirmReception()
+        scoreTracker.trackTransferReception(transaction)
     }
 
     fun cancelTransaction(transactionId: UUID) {

@@ -3,17 +3,17 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import java.util.UUID
 
 class Transaction(
-    val firstUser: String,
+    val firstUser: User,
     val operationType: OperationType,
     val intendedPrice: Double
 ) {
 
-    var secondUser: String? = null
+    var secondUser: User? = null
     var quotation: Double? = null
     var status: TransactionStatus = TransactionStatus.ACTIVE
     val id: UUID = UUID.randomUUID()
 
-    fun accept(secondUser: String, secondUserIntent: OperationType, latestQuotation: Double) {
+    fun accept(secondUser: User, secondUserIntent: OperationType, latestQuotation: Double) {
         validateCompatibleIntents(secondUserIntent)
         status = status.accept()
         this.secondUser = secondUser
