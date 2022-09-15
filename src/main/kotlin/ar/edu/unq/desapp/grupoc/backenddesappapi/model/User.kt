@@ -32,4 +32,12 @@ class User(
     fun increaseReputationPoints(amount: Double) {
         reputationPoints += amount
     }
+
+    fun subtractReputationPoints(amount: Double) {
+        if (reputationPoints < amount){
+            reputationPoints = 0.0
+        } else {
+            reputationPoints -= amount
+        }
+    }
 }

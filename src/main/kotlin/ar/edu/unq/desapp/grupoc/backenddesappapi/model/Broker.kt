@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import java.lang.Math.abs
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -37,14 +38,15 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
         findTransactionById(transactionId).informTransfer()
     }
 
-    fun confirmReception(transactionId: UUID) {
+    fun confirmReception(transactionId: UUID, now: LocalDateTime) {
         val transaction = findTransactionById(transactionId)
         transaction.confirmReception()
-        scoreTracker.trackTransferReception(transaction)
+        scoreTracker.trackTransferReception(transaction, now)
     }
 
-    fun cancelTransaction(transactionId: UUID) {
+    fun cancelTransaction(transactionId: UUID, cancellingUser: User) {
         findTransactionById(transactionId).cancel()
+        scoreTracker.trackTransactionCancellation(cancellingUser)
     }
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {

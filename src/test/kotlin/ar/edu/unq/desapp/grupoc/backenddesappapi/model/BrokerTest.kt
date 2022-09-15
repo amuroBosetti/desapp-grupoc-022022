@@ -139,7 +139,7 @@ class BrokerTest {
             broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
             broker.informTransfer(transaction.id)
 
-            broker.confirmReception(transaction.id)
+            broker.confirmReception(transaction.id, transaction.createadAt)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.COMPLETED)
@@ -149,24 +149,36 @@ class BrokerTest {
         fun `when another user accepts the transaction but the original cancels it, then the transaction is cancelled`() {
             broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
 
-            broker.cancelTransaction(transaction.id)
+            broker.cancelTransaction(transaction.id, user)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.CANCELLED)
         }
 
         @Test
-        fun `when a transaction goes from creation to completion in a certain timeframe, then both users get reputation points`() {
+        fun `when a transaction goes from creation to completion, then both users get reputation points`() {
             val reputationPointsBeforeTransaction = user.getReputationPoints()
             completeTransaction()
 
             assertThat(user.getReputationPoints()).isEqualTo(reputationPointsBeforeTransaction + 10.0)
         }
 
+        @Test
+        fun `when a transaction is cancelled, then the user who cancelled is subtracted reputation points`() {
+            val userWithHighReputation = UserFixture.aUserWithReputation(50.0)
+            val reputationOfCancellerBeforeTransaction = userWithHighReputation.getReputationPoints()
+            val reputationOfOtherUserBeforeTransaction = anotherUser.getReputationPoints()
+
+            broker.cancelTransaction(transaction.id, userWithHighReputation)
+
+            assertThat(userWithHighReputation.getReputationPoints()).isEqualTo(reputationOfCancellerBeforeTransaction - 20.0)
+            assertThat(user.getReputationPoints()).isEqualTo(reputationOfOtherUserBeforeTransaction)
+        }
+
         private fun completeTransaction() {
             broker.processTransaction(transaction.id, anotherUser, OperationType.SELL, aPrice)
             broker.informTransfer(transaction.id)
-            broker.confirmReception(transaction.id)
+            broker.confirmReception(transaction.id, transaction.createadAt)
         }
     }
 

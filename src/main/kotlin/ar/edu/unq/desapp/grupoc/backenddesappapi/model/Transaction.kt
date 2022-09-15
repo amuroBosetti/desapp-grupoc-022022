@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 class Transaction(
@@ -8,6 +9,7 @@ class Transaction(
     val intendedPrice: Double
 ) {
 
+    val createadAt: LocalDateTime = LocalDateTime.now() //TODO esto deberia crearlo la base de datos
     var secondUser: User? = null
     var quotation: Double? = null
     var status: TransactionStatus = TransactionStatus.ACTIVE

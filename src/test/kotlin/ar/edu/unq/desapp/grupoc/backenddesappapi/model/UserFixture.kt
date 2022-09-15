@@ -13,6 +13,12 @@ class UserFixture {
                 "12345678"
             )
         }
+
+        fun aUserWithReputation(reputationScore: Double): User {
+            val user = aUser()
+            user.increaseReputationPoints(reputationScore)
+            return user
+        }
     }
 
 }
