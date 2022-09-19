@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -20,5 +21,37 @@ class UserControllerTest {
     fun `when a POST to user is handled without body, a bad request error is returned`() {
         mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `when a POST to user is handled with missing data, a bad request error is returned`() {
+        val userCreationPayload = UserCreationDTO(
+            "pepe",
+            "argento",
+            "pepe@gmail.com",
+            "",
+            "",
+            "7987818411100011451153",
+            "12345678"
+        )
+        val userCreationJSON = jacksonObjectMapper().writeValueAsString(userCreationPayload)
+        mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(userCreationJSON))
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    internal fun `when a POST to user is handled, then a created status is returned`() {
+        val userCreationPayload = UserCreationDTO(
+            "pepe",
+            "argento",
+            "pepe@gmail.com",
+            "calle falsa 123",
+            "123453645756",
+            "7987818411100011451153",
+            "12345678"
+        )
+        val userCreationJSON = jacksonObjectMapper().writeValueAsString(userCreationPayload)
+        mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(userCreationJSON))
+            .andExpect(status().isCreated)
     }
 }
