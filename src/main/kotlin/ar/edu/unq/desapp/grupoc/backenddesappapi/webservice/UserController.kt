@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
+import java.util.*
 import javax.validation.Valid
 
 @Controller
@@ -22,8 +23,17 @@ class UserController {
     }
 
     @RequestMapping("/user", method = [RequestMethod.POST])
-    fun createUser(@Valid @RequestBody userCreationDTO : UserCreationDTO) : ResponseEntity<String> {
-        return ResponseEntity(HttpStatus.CREATED)
+    fun createUser(@Valid @RequestBody userCreationDTO : UserCreationDTO) : ResponseEntity<UserCreationResponseDTO> {
+        val response = UserCreationResponseDTO(
+            userCreationDTO.name,
+            userCreationDTO.surname,
+            userCreationDTO.email,
+            userCreationDTO.address,
+            userCreationDTO.walletId,
+            userCreationDTO.cvu,
+            UUID.randomUUID()
+        )
+        return ResponseEntity(response, HttpStatus.CREATED)
     }
 
 }

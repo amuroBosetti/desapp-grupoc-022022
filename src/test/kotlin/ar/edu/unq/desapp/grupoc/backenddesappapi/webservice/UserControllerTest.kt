@@ -10,7 +10,6 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.util.Assert
 
 @WebMvcTest
 @AutoConfigureMockMvc
@@ -114,7 +113,7 @@ class UserControllerTest {
     }
 
     @Test
-    internal fun `when a POST to user is handled, then a created status is returned`() {
+     fun `when a POST to user is handled, then a created status and the created user are returned`() {
         val userCreationPayload = UserCreationDTO(
             "pepe",
             "argento",
@@ -125,8 +124,15 @@ class UserControllerTest {
             "12345678"
         )
         val userCreationJSON = jacksonObjectMapper().writeValueAsString(userCreationPayload)
-        mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(userCreationJSON))
+
+        val response = mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(userCreationJSON))
             .andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        val responseDTO = jacksonObjectMapper().readValue(response, UserCreationResponseDTO::class.java)
+        assertThat(responseDTO).usingRecursiveComparison().ignoringFields("userId", "password").isEqualTo(userCreationPayload)
+        assertThat(responseDTO.name).isNotNull
+
     }
 
 
