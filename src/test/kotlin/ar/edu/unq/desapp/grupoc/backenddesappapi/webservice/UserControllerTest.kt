@@ -1,7 +1,12 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.User
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.UserService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -17,6 +22,22 @@ class UserControllerTest {
 
     @Autowired
     lateinit var mockMvc : MockMvc
+
+    @MockkBean
+    lateinit var userService : UserService
+
+    @BeforeEach
+    fun setUp() {
+        every { userService.createUser(any()) } returns User(
+            "pepe@gmail.com",
+            "pepe",
+            "argento",
+            "calle falsa 1234",
+            "password12345",
+            "7987818411100011451153",
+            "12345678"
+            )
+    }
 
     @Test
     fun `when a POST to user is handled without body, a bad request error is returned`() {
@@ -118,7 +139,7 @@ class UserControllerTest {
             "pepe",
             "argento",
             "pepe@gmail.com",
-            "calle falsa 123",
+            "calle falsa 1234",
             "123453645756",
             "7987818411100011451153",
             "12345678"
