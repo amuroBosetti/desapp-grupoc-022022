@@ -1,1 +1,1 @@
-web: java -jar /build/libs/backend-desapp-api-0.0.1-SNAPSHOT.war
+web: java -jar /build/libs/backend-desapp-api-0.0.1-SNAPSHOT.war.jar
