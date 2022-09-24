@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	id("org.springframework.boot") version "2.7.3"
 	id("io.spring.dependency-management") version "1.0.13.RELEASE"
-	war
 	kotlin("jvm") version "1.6.21"
 	kotlin("plugin.spring") version "1.6.21"
 	kotlin("plugin.jpa") version "1.6.21"
@@ -30,7 +29,7 @@ dependencies {
 	//implementation("org.postgresql:postgresql:42.1.4")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.h2database:h2")
-	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
+//	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "mockito-core")
 	}
