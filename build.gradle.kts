@@ -14,6 +14,8 @@ group = "ar.edu.unq.desapp.grupoc"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
+apply(plugin = "io.spring.dependency-management")
+
 repositories {
 	mavenCentral()
 }
@@ -37,6 +39,10 @@ dependencies {
 	testImplementation(kotlin("test"))
 	testImplementation("io.mockk:mockk:1.12.8")
 	testImplementation("com.ninja-squad:springmockk:3.1.1")
+}
+
+springBoot{
+	mainClass.set("ar.edu.unq.desapp.grupoc.backenddesappapi.BackendDesappApiApplicationKt")
 }
 
 tasks.withType<KotlinCompile> {
@@ -73,7 +79,4 @@ sonarqube {
 	}
 }
 
-springBoot {
-	mainClass.set("ar.edu.unq.desapp.grupoc.backenddesappapi.BackendDesappApiApplication")
-}
 
