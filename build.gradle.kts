@@ -31,7 +31,7 @@ dependencies {
 	//implementation("org.postgresql:postgresql:42.1.4")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.h2database:h2")
-//	providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
+	implementation("org.springframework.boot:spring-boot-starter-web")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "mockito-core")
 	}
@@ -78,5 +78,14 @@ sonarqube {
 		property("sonar.host.url", "https://sonarcloud.io")
 	}
 }
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar"){
+    mainClass.set("ar.edu.unq.desapp.grupoc.backenddesappapi.BackendDesappApiApplicationKt")
+}
+
+tasks.getByName<Jar>("jar"){
+	enabled = false
+}
+
 
 
