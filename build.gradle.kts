@@ -73,3 +73,7 @@ sonarqube {
 	}
 }
 
+springBoot {
+	mainClass.set("ar.edu.unq.desapp.grupoc.backenddesappapi.BackendDesappApiApplication")
+}
+
