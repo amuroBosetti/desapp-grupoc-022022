@@ -7,7 +7,16 @@ import org.springframework.stereotype.Service
 @Service
 class UserService {
     fun createUser(userCreationDTO: UserCreationDTO): User {
-        TODO("Not yet implemented")
+        val newUser = User(
+            userCreationDTO.email,
+            userCreationDTO.name,
+            userCreationDTO.surname,
+            userCreationDTO.address,
+            userCreationDTO.password,
+            userCreationDTO.cvu,
+            userCreationDTO.walletId,
+        )
+        return newUser
     }
 
 }
