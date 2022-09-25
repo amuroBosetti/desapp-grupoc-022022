@@ -30,6 +30,11 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.postgresql:postgresql:42.5.0")
+
+	//OpenAPI integration
+	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
+	implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
+
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-web")

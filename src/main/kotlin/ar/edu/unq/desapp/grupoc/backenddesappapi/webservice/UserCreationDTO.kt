@@ -2,7 +2,9 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import org.springframework.validation.annotation.Validated
 import javax.validation.constraints.*
+import javax.xml.bind.annotation.XmlRootElement
 
+@XmlRootElement(name = "create user")
 @Validated
 class UserCreationDTO(
     @field:NotBlank
