@@ -22,10 +22,6 @@ class BrokerUser(
     val walletId: String
 ) {
 
-//    fun User(){
-//        //JPA Constructor
-//    }
-
     @Id
     @GeneratedValue(strategy = IDENTITY)
     var id: Long? = null
@@ -59,13 +55,5 @@ class BrokerUser(
         } else {
             reputationPoints -= amount
         }
-    }
-
-    fun getId(): Long {
-        return id!!
-    }
-
-    fun setId(id: Long) {
-        this.id = id
     }
 }

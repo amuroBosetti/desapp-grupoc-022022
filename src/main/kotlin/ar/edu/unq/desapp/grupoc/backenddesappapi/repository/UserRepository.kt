@@ -1,4 +1,4 @@
-package ar.edu.unq.desapp.grupoc.backenddesappapi.service
+package ar.edu.unq.desapp.grupoc.backenddesappapi.repository
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import org.springframework.data.repository.CrudRepository

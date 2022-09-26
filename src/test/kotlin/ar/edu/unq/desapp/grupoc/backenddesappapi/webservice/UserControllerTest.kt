@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+private const val userId = 123L
+
 @WebMvcTest
 @AutoConfigureMockMvc
 class UserControllerTest {
@@ -28,7 +30,7 @@ class UserControllerTest {
 
     @BeforeEach
     fun setUp() {
-        every { userService.createUser(any()) } returns BrokerUser(
+        val user = BrokerUser(
             "pepe@gmail.com",
             "pepe",
             "argento",
@@ -36,7 +38,9 @@ class UserControllerTest {
             "password12345",
             "7987818411100011451153",
             "12345678"
-            )
+        )
+        user.id = userId
+        every { userService.createUser(any()) } returns user
     }
 
     @Test
@@ -152,6 +156,7 @@ class UserControllerTest {
 
         val responseDTO = jacksonObjectMapper().readValue(response, UserCreationResponseDTO::class.java)
         assertThat(responseDTO).usingRecursiveComparison().ignoringFields("userId", "password").isEqualTo(userCreationPayload)
+        assertThat(responseDTO.userId).isEqualTo(userId)
         assertThat(responseDTO.name).isNotNull
 
     }

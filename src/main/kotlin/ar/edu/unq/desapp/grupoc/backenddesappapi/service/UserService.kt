@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
+import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.UserCreationDTO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
