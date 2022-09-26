@@ -1,0 +1,16 @@
+====== RELEASE NOTE  ==========
+---------------------------------------------------------------------
+TAG 1.0.0
+---------------------------------------------------------------------
+NEW FEATURES:
+* Configuración en GitHubActions del job Build
+* SonarCloud: https://sonarcloud.io/project/overview?id=amuroBosetti_desapp-grupoc-022022
+* Heroku deploy: https://desapp-grupoc-022022.herokuapp.com
+* Swagger: https://desapp-grupoc-022022.herokuapp.com/swagger-ui/index.html#/
+* Modelo: Implementación completa
+* Registro de usuarios: Endpoint create, persistencia en H2
+* Test Coverage: 94.4 %
+
+NOTES (ej: funcionalidad que falta, alguna consideración especial):
+
+KNOWN ISSUES (ej: funcionalidad que saben que están funcionando diferente, algún error conocido en la funcionalidad terminada, etc):
