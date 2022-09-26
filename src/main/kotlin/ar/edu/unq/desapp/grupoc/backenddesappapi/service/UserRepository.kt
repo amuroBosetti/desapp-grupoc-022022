@@ -1,8 +1,10 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.User
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
+import javax.transaction.Transactional
 
 @Repository
-interface UserRepository : CrudRepository<User, Long>
+@Transactional
+interface UserRepository : CrudRepository<BrokerUser, Long>

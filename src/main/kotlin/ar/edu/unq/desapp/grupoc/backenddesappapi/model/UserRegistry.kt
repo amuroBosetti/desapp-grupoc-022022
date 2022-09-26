@@ -2,13 +2,13 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 class UserRegistry {
 
-    private val registry: MutableList<User> = mutableListOf<User>()
+    private val registry: MutableList<BrokerUser> = mutableListOf()
 
-    fun register(user: User) {
+    fun register(user: BrokerUser) {
         registry.add(user)
     }
 
-    fun findUserWithEmail(email: String): User {
+    fun findUserWithEmail(email: String): BrokerUser {
         return registry.first()
     }
 

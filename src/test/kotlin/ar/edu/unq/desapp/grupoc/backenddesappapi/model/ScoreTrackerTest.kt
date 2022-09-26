@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 
 class ScoreTrackerTest {
 
-    private val aUserWithHighReputation: User = UserFixture.aUserWithReputation(50.0)
-    private val aUserWithLowReputation: User = UserFixture.aUserWithReputation(10.0)
+    private val aUserWithHighReputation: BrokerUser = UserFixture.aUserWithReputation(50.0)
+    private val aUserWithLowReputation: BrokerUser = UserFixture.aUserWithReputation(10.0)
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
     @Test

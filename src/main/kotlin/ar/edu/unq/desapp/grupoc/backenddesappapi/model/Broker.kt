@@ -9,14 +9,14 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
     private val transactions: MutableList<Transaction> = mutableListOf()
 
-    fun expressOperationIntent(user: User, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
+    fun expressOperationIntent(user: BrokerUser, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         val transaction = Transaction(user, operationType, intendedPrice)
         transactions.add(transaction)
         return transaction
     }
 
-    fun findTransactionsOf(user: User): List<Transaction> {
+    fun findTransactionsOf(user: BrokerUser): List<Transaction> {
         return transactions.filter { transaction -> transaction.firstUser == user }
     }
 
@@ -24,7 +24,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
         return transactions.filter { transaction -> transaction.isPending() }
     }
 
-    fun processTransaction(transactionId: UUID, acceptingUser: User, operationType: OperationType, latestQuotation: Double) {
+    fun processTransaction(transactionId: UUID, acceptingUser: BrokerUser, operationType: OperationType, latestQuotation: Double) {
         val transaction = findTransactionById(transactionId)
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
@@ -44,7 +44,7 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
         scoreTracker.trackTransferReception(transaction, now)
     }
 
-    fun cancelTransaction(transactionId: UUID, cancellingUser: User) {
+    fun cancelTransaction(transactionId: UUID, cancellingUser: BrokerUser) {
         findTransactionById(transactionId).cancel()
         scoreTracker.trackTransactionCancellation(cancellingUser)
     }

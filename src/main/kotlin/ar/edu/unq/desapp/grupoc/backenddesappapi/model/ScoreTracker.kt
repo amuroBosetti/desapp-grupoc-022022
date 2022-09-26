@@ -9,7 +9,7 @@ class ScoreTracker {
         transaction.secondUser!!.increaseReputationPoints(amountToAdd)
     }
 
-    fun trackTransactionCancellation(cancellingUser: User) {
+    fun trackTransactionCancellation(cancellingUser: BrokerUser) {
         cancellingUser.subtractReputationPoints(20.0)
     }
 

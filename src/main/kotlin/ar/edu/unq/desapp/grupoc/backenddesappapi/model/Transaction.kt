@@ -4,18 +4,18 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class Transaction(
-    val firstUser: User,
+    val firstUser: BrokerUser,
     val operationType: OperationType,
     val intendedPrice: Double
 ) {
 
     val createadAt: LocalDateTime = LocalDateTime.now() //TODO esto deberia crearlo la base de datos
-    var secondUser: User? = null
+    var secondUser: BrokerUser? = null
     var quotation: Double? = null
     var status: TransactionStatus = TransactionStatus.ACTIVE
     val id: UUID = UUID.randomUUID()
 
-    fun accept(secondUser: User, secondUserIntent: OperationType, latestQuotation: Double) {
+    fun accept(secondUser: BrokerUser, secondUserIntent: OperationType, latestQuotation: Double) {
         validateCompatibleIntents(secondUserIntent)
         status = status.accept()
         this.secondUser = secondUser

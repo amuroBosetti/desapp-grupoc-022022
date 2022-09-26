@@ -13,7 +13,7 @@ class UserTest {
     @Test
     fun `when a user has been registered successfully, then they can be found in the user registry`() {
         val email = "user@unq.edu.ar"
-        val user = User(email, "Pepe", "Argento", "Calle falsa 123", "Abcdef!", "8340632811100092378329", "12345678")
+        val user = BrokerUser(email, "Pepe", "Argento", "Calle falsa 123", "Abcdef!", "8340632811100092378329", "12345678")
 
         userRegistry.register(user)
 
@@ -23,7 +23,7 @@ class UserTest {
     @ParameterizedTest
     @ValueSource(strings = ["usuario", "usuario@un", "usuario@unq", "" ])
     fun `when a user tries to register with an invalid email format, then it fails`(invalidEmail : String) {
-        assertThatThrownBy { User(
+        assertThatThrownBy { BrokerUser(
             invalidEmail,
             "Pepe",
             "Argento",

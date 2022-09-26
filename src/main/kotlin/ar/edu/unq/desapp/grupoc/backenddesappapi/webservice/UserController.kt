@@ -1,6 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.User
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseStatus
-import java.util.*
 import javax.validation.Valid
 
 @Tag(name = "Users", description = "User registration service")
@@ -36,7 +35,7 @@ class UserController {
     @Operation(summary = "Register a new user")
     @RequestMapping("/user", method = [RequestMethod.POST])
     fun createUser(@Valid @RequestBody userCreationDTO : UserCreationDTO) : ResponseEntity<UserCreationResponseDTO> {
-        val createdUser : User = userService.createUser(userCreationDTO)
+        val createdUser : BrokerUser = userService.createUser(userCreationDTO)
 
         val response = UserCreationResponseDTO(
             createdUser.name,
@@ -45,7 +44,7 @@ class UserController {
             createdUser.address,
             createdUser.walletId,
             createdUser.cvu,
-            UUID.randomUUID()
+            createdUser.id
         )
 
         return ResponseEntity(response, HttpStatus.CREATED)

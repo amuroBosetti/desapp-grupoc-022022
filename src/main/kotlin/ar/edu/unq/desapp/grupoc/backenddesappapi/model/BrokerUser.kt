@@ -1,24 +1,36 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
+import javax.persistence.*
 import javax.persistence.GenerationType.*
-import javax.persistence.Id
 
 @Entity
-class User(
+@Table
+class BrokerUser(
+    @Column
     val email: String,
+    @Column
     val name: String,
+    @Column
     val surname: String,
+    @Column
     val address: String,
+    @Column
     val password: String,
+    @Column
     val cvu: String,
+    @Column
     val walletId: String
 ) {
-    @Id
-    @GeneratedValue(strategy = AUTO)
-    val id: Long = 0
 
+//    fun User(){
+//        //JPA Constructor
+//    }
+
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    var id: Long? = null
+
+    @Column
     private var reputationPoints: Double = 0.0
 
     private val EMAIL_REGEX = "^[A-Za-z](.*)(@)(.+)(\\.)(.+)"
@@ -47,5 +59,13 @@ class User(
         } else {
             reputationPoints -= amount
         }
+    }
+
+    fun getId(): Long {
+        return id!!
+    }
+
+    fun setId(id: Long) {
+        this.id = id
     }
 }

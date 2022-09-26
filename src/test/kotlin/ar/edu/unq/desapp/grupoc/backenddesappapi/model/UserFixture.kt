@@ -2,8 +2,8 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 class UserFixture {
     companion object {
-        fun aUser(email: String = "alarak@gmail.com"): User {
-            return User(
+        fun aUser(email: String = "alarak@gmail.com"): BrokerUser {
+            return BrokerUser(
                 email,
                 "Alarak",
                 "Greycastle",
@@ -14,7 +14,7 @@ class UserFixture {
             )
         }
 
-        fun aUserWithReputation(reputationScore: Double): User {
+        fun aUserWithReputation(reputationScore: Double): BrokerUser {
             val user = aUser()
             user.increaseReputationPoints(reputationScore)
             return user

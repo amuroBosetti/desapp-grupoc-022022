@@ -1,6 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.User
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.UserService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
@@ -28,7 +28,7 @@ class UserControllerTest {
 
     @BeforeEach
     fun setUp() {
-        every { userService.createUser(any()) } returns User(
+        every { userService.createUser(any()) } returns BrokerUser(
             "pepe@gmail.com",
             "pepe",
             "argento",
