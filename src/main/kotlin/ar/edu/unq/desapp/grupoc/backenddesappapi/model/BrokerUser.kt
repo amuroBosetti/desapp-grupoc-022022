@@ -2,6 +2,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import javax.persistence.*
 import javax.persistence.GenerationType.*
+import kotlin.jvm.Transient
 
 @Entity
 @Table
@@ -29,6 +30,7 @@ class BrokerUser(
     @Column
     private var reputationPoints: Double = 0.0
 
+    @Transient
     private val EMAIL_REGEX = "^[A-Za-z](.*)(@)(.+)(\\.)(.+)"
 
     init {
