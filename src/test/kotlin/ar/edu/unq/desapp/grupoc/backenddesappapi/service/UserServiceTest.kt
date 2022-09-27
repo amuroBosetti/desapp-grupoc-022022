@@ -30,7 +30,7 @@ class UserServiceTest {
         val createdUser = service.createUser(user)
 
         assertThat(repository.findById(createdUser.id!!)).hasValueSatisfying {
-            assertThat(it).usingRecursiveComparison().isEqualTo(createdUser)
+            assertThat(it).usingRecursiveComparison().ignoringFields("EMAIL_REGEX").isEqualTo(createdUser)
         }
     }
 }
