@@ -21,7 +21,9 @@ class UserCreationDTO(
     val address: String,
     @field:NotBlank
     val password: String,
+    @field:Size(min = 22, max = 22)
     val cvu: String,
+    @field:Size(min = 8, max = 8)
     val walletId: String
 ) {
 

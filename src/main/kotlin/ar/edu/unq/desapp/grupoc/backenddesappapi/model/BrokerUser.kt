@@ -2,24 +2,30 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import javax.persistence.*
 import javax.persistence.GenerationType.*
+import javax.validation.constraints.Size
 import kotlin.jvm.Transient
 
 @Entity
 @Table
 class BrokerUser(
-    @Column
+    @Column(unique = true, nullable = false)
     val email: String,
-    @Column
+    @Column(nullable = false)
+    @Size(min = 3, max = 30)
     val name: String,
-    @Column
+    @Column(nullable = false)
+    @Size(min = 3, max = 30)
     val surname: String,
-    @Column
+    @Column(nullable = false)
+    @Size(min = 10, max = 30)
     val address: String,
-    @Column
+    @Column(nullable = false)
     val password: String,
-    @Column
+    @Column(unique = true)
+    @Size(min = 22, max = 22)
     val cvu: String,
-    @Column
+    @Size(min = 8, max = 8)
+    @Column(unique = true)
     val walletId: String
 ) {
 
