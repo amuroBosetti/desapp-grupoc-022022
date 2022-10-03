@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
@@ -36,7 +37,7 @@ class TransactionControllerTest {
             .throws(NotRegisteredUserException("User with email $NON_EXISTING_USER does not exist"))
 
         every { transactionService.createTransaction(EXISTING_USER, any()) }
-            .returns(TransactionCreationResponseDTO(CREATED_OPERATION_ID))
+            .returns(TransactionCreationResponseDTO(CREATED_OPERATION_ID, "", 0.0, OperationType.BUY))
     }
 
     @Test
@@ -68,16 +69,18 @@ class TransactionControllerTest {
     @Test
     fun `when a registered user tries to create a transaction with an invalid body, then it fails with a bad request error`() {
         val invalidBody = """
-                { "symbol": "" }
+                {
+                 "symbol": "",
+                 "intendedPrice": 0.0,
+                 "operationType": "BUY"
+                 }
             """
 
         val response = mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("user", EXISTING_USER)
-                .content(
-                    invalidBody
-                )
+                .content(invalidBody)
         ).andExpect(status().isBadRequest).andReturn().response.contentAsString
 
         assertThat(response).contains("Field symbol must not be blank")
@@ -97,5 +100,5 @@ class TransactionControllerTest {
         assertThat(responseDTO.operationId).isEqualTo(CREATED_OPERATION_ID)
     }
 
-    private fun validPayload() = jacksonObjectMapper().writeValueAsString(TransactionCreationDTO("BNBUSDT"))
+    private fun validPayload() = jacksonObjectMapper().writeValueAsString(TransactionCreationDTO("BNBUSDT", 0.0, OperationType.SELL))
 }

@@ -1,19 +1,29 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import java.lang.Math.abs
 import java.time.LocalDateTime
 import java.util.*
 
 
-class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
+class Broker(
+    val quotations: HashMap<String, Double>,
+    var percentage: Double,
+    val transactionRepository: TransactionRepository
+) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
     private val transactions: MutableList<Transaction> = mutableListOf()
 
-    fun expressOperationIntent(user: BrokerUser, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
+    fun expressOperationIntent(
+        user: BrokerUser,
+        operationType: OperationType,
+        intendedPrice: Double,
+        cryptoSymbol: String
+    ): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
-        val transaction = Transaction(user, operationType, intendedPrice)
+        val transaction = Transaction(user, operationType, intendedPrice, "BNBUSDT")
         transactions.add(transaction)
-        return transaction
+        return transactionRepository.save(transaction)
     }
 
     fun findTransactionsOf(user: BrokerUser): List<Transaction> {
@@ -24,7 +34,12 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
         return transactions.filter { transaction -> transaction.isPending() }
     }
 
-    fun processTransaction(transactionId: UUID, acceptingUser: BrokerUser, operationType: OperationType, latestQuotation: Double) {
+    fun processTransaction(
+        transactionId: UUID,
+        acceptingUser: BrokerUser,
+        operationType: OperationType,
+        latestQuotation: Double
+    ) {
         val transaction = findTransactionById(transactionId)
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
@@ -51,10 +66,10 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
         val latestPrice = latestQuotation(cryptoSymbol)!!
-        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice > latestPrice){
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice > latestPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 higher than the latest quotation")
         }
-        if(priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice < latestPrice){
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice < latestPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 lower than the latest quotation")
         }
     }
