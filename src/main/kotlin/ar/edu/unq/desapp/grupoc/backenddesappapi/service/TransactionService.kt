@@ -41,7 +41,7 @@ class TransactionService {
             throw RuntimeException("User email cannot be blank")
         }
         return userRepository.findByEmail(userEmail)
-            ?: throw NotRegisteredUserException("User with email $userEmail is not registered")
+            ?: throw NotRegisteredUserException(userEmail)
     }
 
 }
