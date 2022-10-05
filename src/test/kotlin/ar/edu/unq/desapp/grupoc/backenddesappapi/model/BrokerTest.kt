@@ -13,9 +13,11 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.transaction.annotation.Transactional
 import java.util.HashMap
 
 @SpringBootTest
+@Transactional
 class BrokerTest {
 
     @Autowired
@@ -45,7 +47,7 @@ class BrokerTest {
     fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType) {
         broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
 
-        assertThat(broker.findTransactionsOf(user).first().firstUser).isEqualTo(user)
+        assertThat(broker.findTransactionsOf(user).first().firstUser).usingRecursiveComparison().isEqualTo(user)
     }
 
     @ParameterizedTest
@@ -54,7 +56,7 @@ class BrokerTest {
         broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
         broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol)
 
-        assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).isEqualTo(anotherUser)
+        assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).usingRecursiveComparison().isEqualTo(anotherUser)
     }
 
     @Test
@@ -94,7 +96,7 @@ class BrokerTest {
             broker.processTransaction(transaction.id!!, anotherUser, OperationType.SELL, aPrice)
 
             val processedTransaction = broker.pendingTransactions().first()
-            assertThat(processedTransaction.secondUser).isEqualTo(anotherUser)
+            assertThat(processedTransaction.secondUser).usingRecursiveComparison().isEqualTo(anotherUser)
             assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
         }
 

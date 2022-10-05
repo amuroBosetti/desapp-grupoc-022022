@@ -12,7 +12,6 @@ class Broker(
     private val transactionRepository: TransactionRepository
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
-    private val transactions: MutableList<Transaction> = mutableListOf()
 
     fun expressOperationIntent(
         user: BrokerUser,
@@ -23,16 +22,15 @@ class Broker(
         //TODO obtener la quotation desde el quotationService
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol)
-        transactions.add(transaction)
         return transactionRepository.save(transaction)
     }
 
     fun findTransactionsOf(user: BrokerUser): List<Transaction> {
-        return transactions.filter { transaction -> transaction.firstUser == user }
+        return transactionRepository.findByFirstUser(user)
     }
 
     fun pendingTransactions(): List<Transaction> {
-        return transactions.filter { transaction -> transaction.isPending() }
+        return transactionRepository.findAllByStatus(TransactionStatus.PENDING)
     }
 
     fun processTransaction(
@@ -86,6 +84,6 @@ class Broker(
     }
 
     private fun findTransactionById(transactionId: UUID) =
-        transactions.find { transaction -> transaction.id == transactionId }!!
+        transactionRepository.findById(transactionId).get()
 
 }
