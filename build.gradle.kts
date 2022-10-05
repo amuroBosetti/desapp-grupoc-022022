@@ -31,6 +31,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.postgresql:postgresql:42.5.0")
 	implementation("com.fasterxml.jackson.module:jackson-modules-java8:2.13.4")
+	implementation("co.oril:binance-api-client-java:1.0.3")
 
 	//OpenAPI integration
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
