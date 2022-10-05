@@ -3,7 +3,6 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Broker
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
@@ -25,14 +24,14 @@ class TransactionService {
 
     @PostConstruct
     fun init() {
-        broker = Broker(hashMapOf(Pair("BNBUSDT", 10.0)), 5.0, transactionRepository)
+        broker = Broker(hashMapOf(Pair("BNBUSDT", 15.0)), 5.0, transactionRepository)
     }
 
     fun createTransaction(userEmail: String, transactionCreationDTO: TransactionCreationDTO):
             TransactionCreationResponseDTO {
         val user = findUser(userEmail)
         val savedTransaction = broker.expressOperationIntent(
-                user, OperationType.SELL, 10.0, transactionCreationDTO.symbol
+                user, transactionCreationDTO.operationType, transactionCreationDTO.intendedPrice, transactionCreationDTO.symbol
             )
         return TransactionCreationResponseDTO.from(savedTransaction)
     }

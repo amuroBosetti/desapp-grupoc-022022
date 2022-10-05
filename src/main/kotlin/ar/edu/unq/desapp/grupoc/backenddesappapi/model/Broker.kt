@@ -7,9 +7,9 @@ import java.util.*
 
 
 class Broker(
-    val quotations: HashMap<String, Double>,
+    private val quotations: HashMap<String, Double>,
     var percentage: Double,
-    val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
     private val transactions: MutableList<Transaction> = mutableListOf()
@@ -20,8 +20,9 @@ class Broker(
         intendedPrice: Double,
         cryptoSymbol: String
     ): Transaction {
+        //TODO obtener la quotation desde el quotationService
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
-        val transaction = Transaction(user, operationType, intendedPrice, "BNBUSDT")
+        val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol)
         transactions.add(transaction)
         return transactionRepository.save(transaction)
     }
