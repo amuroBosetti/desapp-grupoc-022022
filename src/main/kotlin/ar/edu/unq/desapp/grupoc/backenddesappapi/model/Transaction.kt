@@ -1,19 +1,27 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
+import javax.persistence.*
 
+@Entity
 class Transaction(
+    @ManyToOne
     val firstUser: BrokerUser,
     val operationType: OperationType,
-    val intendedPrice: Double
+    val intendedPrice: Double,
+    val symbol: String
 ) {
 
     val createadAt: LocalDateTime = LocalDateTime.now() //TODO esto deberia crearlo la base de datos
+    @ManyToOne
     var secondUser: BrokerUser? = null
     var quotation: Double? = null
     var status: TransactionStatus = TransactionStatus.ACTIVE
-    val id: UUID = UUID.randomUUID()
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    var id: UUID? = null
 
     fun accept(secondUser: BrokerUser, secondUserIntent: OperationType, latestQuotation: Double) {
         validateCompatibleIntents(secondUserIntent)
