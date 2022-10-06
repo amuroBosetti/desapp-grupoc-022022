@@ -5,6 +5,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
@@ -23,6 +24,12 @@ class TransactionController {
             "Field ${it.field} ${it.defaultMessage}"
         }
         return ResponseEntity(messages.toString(),HttpStatus.BAD_REQUEST)
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleException(exception: HttpMessageNotReadableException) : ResponseEntity<String>{
+        return ResponseEntity(HttpStatus.BAD_REQUEST)
     }
 
     @RequestMapping("/transaction", method = [RequestMethod.POST])

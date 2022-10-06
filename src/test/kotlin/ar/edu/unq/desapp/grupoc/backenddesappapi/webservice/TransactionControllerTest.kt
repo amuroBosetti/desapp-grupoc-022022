@@ -7,8 +7,11 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.annotations.Parameter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -17,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
+import java.util.stream.Stream
 
 private const val NON_EXISTING_USER = "nonexistinguser@gmail.com"
 private const val EXISTING_USER = "registereduser@gmail.com"
@@ -66,24 +70,15 @@ class TransactionControllerTest {
         ).andExpect(status().isBadRequest)
     }
 
-    @Test
-    fun `when a registered user tries to create a transaction with an invalid body, then it fails with a bad request error`() {
-        val invalidBody = """
-                {
-                 "symbol": "",
-                 "intendedPrice": 0.0,
-                 "operationType": "BUY"
-                 }
-            """
-
-        val response = mockMvc.perform(
+    @ParameterizedTest
+    @MethodSource("invalidBodies")
+    fun `when a registered user tries to create a transaction with an invalid body, then it fails with a bad request error`(invalidBody : String) {
+        mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("user", EXISTING_USER)
                 .content(invalidBody)
-        ).andExpect(status().isBadRequest).andReturn().response.contentAsString
-
-        assertThat(response).contains("Field symbol must not be blank")
+        ).andExpect(status().isBadRequest)
     }
 
     @Test
@@ -101,4 +96,15 @@ class TransactionControllerTest {
     }
 
     private fun validPayload() = jacksonObjectMapper().writeValueAsString(TransactionCreationDTO("BNBUSDT", 0.0, OperationType.SELL))
+
+    companion object {
+        @JvmStatic
+        fun invalidBodies(): Stream<String> {
+            return Stream.of(
+                """ { "symbol": "", "intendedPrice": 0.0, "operationType": "BUY" } """,
+                """ { "symbol": "ALICEUSDT", "intendedPrice": , "operationType": "BUY" } """,
+                """ { "symbol": "ALICEUSDT", "intendedPrice": 0.0, "operationType": "WEA" } """,
+            )
+        }
+    }
 }
