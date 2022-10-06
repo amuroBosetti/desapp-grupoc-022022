@@ -28,7 +28,7 @@ class TransactionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        val user = UserFixture.aUser(VALID_USER)
+        val user = UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345678")
         userRepository.save(user)
     }
 

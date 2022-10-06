@@ -27,7 +27,7 @@ class BrokerTest {
     private lateinit var userRepository: UserRepository
 
     private val user = UserFixture.aUser()
-    private val anotherUser = UserFixture.aUser("pepito@gmail.com")
+    private val anotherUser = UserFixture.aUser("pepito@gmail.com", "9506568711100060517136", "12345679")
     private lateinit var broker: Broker
     private val aPrice = 1.00
     private val higherIntendedPrice = 1.05
@@ -35,6 +35,7 @@ class BrokerTest {
     private val cryptoSymbol = "ALICEUSDT"
     private val quotations = HashMap<String, Double>()
     private val percentage : Double = 5.00
+
     @BeforeEach
     internal fun setUp() {
         userRepository.saveAll(listOf(user, anotherUser))
