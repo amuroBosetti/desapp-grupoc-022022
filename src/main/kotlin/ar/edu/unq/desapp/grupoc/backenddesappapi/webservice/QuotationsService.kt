@@ -11,7 +11,11 @@ class QuotationsService {
     @Autowired
     lateinit var client: BinanceApiRestClient
 
-    fun getTokenPrice(ticker: String): TickerPrice {
-        return client.getPrice(ticker)
+    fun getTokenPrice(ticker: String?): TickerPrice {
+        try {
+            return client.getPrice(ticker)
+        } catch (e: Exception){
+            throw RuntimeException("Could not get the token price")
+        }
     }
 }
