@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.assertFailsWith
 
 
 @SpringBootTest
@@ -28,7 +29,9 @@ class QuotationsServiceTest {
         tickerPrice.price = mockPrice
         tickerPrice.symbol = mockSymbol
 
-        every { client.getPrice(any()) } returns tickerPrice
+        every { client.getPrice("") } answers { throw RuntimeException("Could not get the token price") }
+        every { client.getPrice(mockSymbol) } answers { tickerPrice }
+
     }
 
     @Test
@@ -38,5 +41,16 @@ class QuotationsServiceTest {
 
         assertThat(tickerPriceResponse.price).isEqualTo(mockPrice)
         assertThat(tickerPriceResponse.symbol).isEqualTo(mockSymbol)
+    }
+
+    @Test
+    fun `when asked a token price but it fails then it throws a bad status`(){
+
+        assertFailsWith<RuntimeException>(
+            message = "Could not get the token price",
+            block = {
+                service.getTokenPrice("")
+            }
+        )
     }
 }
