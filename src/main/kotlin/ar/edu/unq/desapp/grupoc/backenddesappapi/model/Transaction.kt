@@ -1,6 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 import javax.persistence.*
 
@@ -13,7 +13,7 @@ class Transaction(
     val symbol: String
 ) {
 
-    val createadAt: LocalDateTime = LocalDateTime.now() //TODO esto deberia crearlo la base de datos
+    val createadAt: Instant = Instant.now() //TODO esto deberia crearlo la base de datos
     @ManyToOne
     var secondUser: BrokerUser? = null
     var quotation: Double? = null

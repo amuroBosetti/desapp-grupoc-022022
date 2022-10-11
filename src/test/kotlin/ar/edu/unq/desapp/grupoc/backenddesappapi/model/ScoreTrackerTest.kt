@@ -46,7 +46,7 @@ class ScoreTrackerTest {
         val user2PreviousScore = aUserWithHighReputation.getReputationPoints()
         val transaction = getTransaction()
 
-        scoreTracker.trackTransferReception(transaction, transaction.createadAt.plusMinutes(31))
+        scoreTracker.trackTransferReception(transaction, transaction.createadAt.plusSeconds(1860))
 
         assertThat(aUserWithLowReputation.getReputationPoints()).isEqualByComparingTo(user1PreviousScore + 5.0)
         assertThat(aUserWithHighReputation.getReputationPoints()).isEqualByComparingTo(user2PreviousScore + 5.0)
