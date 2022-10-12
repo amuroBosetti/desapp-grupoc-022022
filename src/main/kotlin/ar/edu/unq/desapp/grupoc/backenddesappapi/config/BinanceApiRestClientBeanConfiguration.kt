@@ -10,8 +10,13 @@ import org.springframework.context.annotation.Configuration
 class BinanceApiRestClientBeanConfiguration {
 
     @Bean(name = ["binanceApiRestClient"])
-    fun getApiClient() : BinanceApiRestClient {
-        return BinanceApiClientFactory.newInstance(DomainType.Com).newRestClient(DomainType.Com)
+    fun getApiClient() : BinanceApiRestClient? {
+        return getApiFactory()?.newRestClient(DomainType.Com)
+    }
+
+    @Bean(name = ["binanceApiClientFactory"])
+    fun getApiFactory() : BinanceApiClientFactory? {
+        return BinanceApiClientFactory.newInstance(DomainType.Com)
     }
 
 }

@@ -1,4 +1,5 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice;
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import org.springframework.stereotype.Controller;
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*
 @Controller
 class QuotationsController {
 
-    @Autowired
+    @Autowired(required = true)
     lateinit var quotationsService: QuotationsService
 
     @GetMapping
