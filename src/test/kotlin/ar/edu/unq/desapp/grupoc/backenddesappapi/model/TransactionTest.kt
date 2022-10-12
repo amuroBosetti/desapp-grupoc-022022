@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 
 class TransactionTest {
 
-    private val user: BrokerUser = UserFixture.aUser()
-    private val acceptingUser: BrokerUser = UserFixture.aUser("pepito@gmail.com")
+    private val user: BrokerUser = UserFixture.aUser(cvu = "9506368711100060517136", walletId = "12345678")
+    private val acceptingUser: BrokerUser = UserFixture.aUser("pepito@gmail.com", "9506368711100060517136", "12345678")
     private val operationType : OperationType = OperationType.BUY
     private val intendedPrice : Double = 1.01
 
@@ -128,5 +128,5 @@ class TransactionTest {
         return transaction
     }
 
-    private fun getActiveTransaction() = Transaction(user, operationType, intendedPrice)
+    private fun getActiveTransaction() = Transaction(user, operationType, intendedPrice, "BNBUSDT")
 }

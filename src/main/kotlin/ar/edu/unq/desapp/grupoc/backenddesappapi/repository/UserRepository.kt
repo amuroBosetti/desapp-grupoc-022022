@@ -7,4 +7,8 @@ import javax.transaction.Transactional
 
 @Repository
 @Transactional
-interface UserRepository : CrudRepository<BrokerUser, Long>
+interface UserRepository : CrudRepository<BrokerUser, Long> {
+
+    fun findByEmail(email: String) : BrokerUser?
+
+}

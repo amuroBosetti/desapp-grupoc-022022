@@ -1,30 +1,44 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import java.lang.Math.abs
 import java.time.LocalDateTime
 import java.util.*
 
 
-class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
+class Broker(
+    private val quotations: HashMap<String, Double>,
+    var percentage: Double,
+    private val transactionRepository: TransactionRepository
+) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
-    private val transactions: MutableList<Transaction> = mutableListOf()
 
-    fun expressOperationIntent(user: BrokerUser, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String): Transaction {
+    fun expressOperationIntent(
+        user: BrokerUser,
+        operationType: OperationType,
+        intendedPrice: Double,
+        cryptoSymbol: String
+    ): Transaction {
+        //TODO obtener la quotation desde el quotationService
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
-        val transaction = Transaction(user, operationType, intendedPrice)
-        transactions.add(transaction)
-        return transaction
+        val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol)
+        return transactionRepository.save(transaction)
     }
 
     fun findTransactionsOf(user: BrokerUser): List<Transaction> {
-        return transactions.filter { transaction -> transaction.firstUser == user }
+        return transactionRepository.findByFirstUser(user)
     }
 
     fun pendingTransactions(): List<Transaction> {
-        return transactions.filter { transaction -> transaction.isPending() }
+        return transactionRepository.findAllByStatus(TransactionStatus.PENDING)
     }
 
-    fun processTransaction(transactionId: UUID, acceptingUser: BrokerUser, operationType: OperationType, latestQuotation: Double) {
+    fun processTransaction(
+        transactionId: UUID,
+        acceptingUser: BrokerUser,
+        operationType: OperationType,
+        latestQuotation: Double
+    ) {
         val transaction = findTransactionById(transactionId)
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
@@ -51,10 +65,10 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
         val latestPrice = latestQuotation(cryptoSymbol)!!
-        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice > latestPrice){
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice > latestPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 higher than the latest quotation")
         }
-        if(priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice < latestPrice){
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice < latestPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 lower than the latest quotation")
         }
     }
@@ -70,6 +84,6 @@ class Broker(val quotations: HashMap<String, Double>, var percentage: Double) {
     }
 
     private fun findTransactionById(transactionId: UUID) =
-        transactions.find { transaction -> transaction.id == transactionId }!!
+        transactionRepository.findById(transactionId).get()
 
 }
