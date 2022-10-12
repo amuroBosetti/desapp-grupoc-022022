@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
 import com.ninjasquad.springmockk.MockkBean
@@ -29,9 +30,8 @@ class QuotationsServiceTest {
         tickerPrice.price = mockPrice
         tickerPrice.symbol = mockSymbol
 
-        every { client.getPrice("") } answers { throw RuntimeException("Could not get the token price") }
-        every { client.getPrice(mockSymbol) } answers { tickerPrice }
-
+        every { client.getPrice(mockSymbol) } returns  tickerPrice
+        every { client.getPrice("") } throws RuntimeException("Could not get the token price")
     }
 
     @Test
