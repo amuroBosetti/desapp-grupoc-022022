@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.*
 import javax.persistence.*
 
-@Entity
+@Entity(name = "crypto_symbols")
 @Table
 class CryptoSymbol(
 
@@ -12,6 +12,6 @@ class CryptoSymbol(
     val symbol: String) {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
 }
