@@ -19,11 +19,23 @@ class QuotationsController {
     @RequestMapping("/tokenPrice/{ticker}")
     @Operation(summary = "Get a token price")
     @ResponseBody
-    fun getTokenPrice(@PathVariable ticker: String): ResponseEntity<String> {
+    fun getTokenPrice(@PathVariable ticker: String): ResponseEntity<TickerPriceDTO> {
         return try {
-            ResponseEntity(quotationsService.getTokenPrice(ticker).toString(), HttpStatus.OK)
+            ResponseEntity(quotationsService.getTokenPrice(ticker), HttpStatus.OK)
         } catch (e: Exception){
-            ResponseEntity(e.toString(), HttpStatus.BAD_REQUEST)
+            ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @GetMapping
+    @RequestMapping("/tokenPrices")
+    @Operation(summary = "Get all listed token prices")
+    @ResponseBody
+    fun getAllTokenPrices(): ResponseEntity<String> {
+        return try {
+            ResponseEntity(quotationsService.getAllTokenPrices().toString(), HttpStatus.OK)
+        } catch (e: Exception){
+            ResponseEntity(HttpStatus.BAD_REQUEST)
         }
     }
 }
