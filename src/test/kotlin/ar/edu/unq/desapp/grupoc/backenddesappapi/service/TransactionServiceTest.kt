@@ -66,5 +66,14 @@ class TransactionServiceTest {
         assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
     }
 
+    @Test
+    @Transactional
+    fun `when all active transactions are requested, then they are returned`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+
+        assertThat(transactionService.getActiveTransactions()).singleElement().extracting("id")
+            .isEqualTo(transaction.operationId)
+    }
+
     private fun validCreationPayload() = TransactionCreationDTO(SYMBOL, 15.0, OperationType.BUY)
 }
