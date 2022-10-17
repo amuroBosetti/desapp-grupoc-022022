@@ -19,26 +19,35 @@ class TransactionController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleException(exception: MethodArgumentNotValidException) : ResponseEntity<String>{
+    fun handleException(exception: MethodArgumentNotValidException): ResponseEntity<String> {
         val messages = exception.fieldErrors.map {
             "Field ${it.field} ${it.defaultMessage}"
         }
-        return ResponseEntity(messages.toString(),HttpStatus.BAD_REQUEST)
+        return ResponseEntity(messages.toString(), HttpStatus.BAD_REQUEST)
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException::class)
-    fun handleException(exception: HttpMessageNotReadableException) : ResponseEntity<String>{
+    fun handleException(exception: HttpMessageNotReadableException): ResponseEntity<String> {
         return ResponseEntity(HttpStatus.BAD_REQUEST)
     }
 
     @RequestMapping("/transaction", method = [RequestMethod.POST])
-    fun createTransaction(@RequestHeader("user") userEmail : String,  @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO) : ResponseEntity<TransactionCreationResponseDTO> {
+    fun createTransaction(
+        @RequestHeader("user") userEmail: String,
+        @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO
+    ): ResponseEntity<TransactionCreationResponseDTO> {
         return try {
             ResponseEntity(transactionService.createTransaction(userEmail, transactionCreationDTO), HttpStatus.CREATED)
         } catch (e: NotRegisteredUserException) {
             ResponseEntity(HttpStatus.UNAUTHORIZED)
         }
+    }
+
+    @RequestMapping("/transaction/active", method = [RequestMethod.GET])
+    fun getActiveTransactions(): ResponseEntity<List<ActiveTransactionDTO>> {
+        val transactionList = transactionService.getActiveTransactions().map { ActiveTransactionDTO.from(it) }
+        return ResponseEntity(transactionList, HttpStatus.OK)
     }
 
 }

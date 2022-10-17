@@ -28,7 +28,7 @@ class TransactionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        val user = UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345678")
+        val user = UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345678", 5L)
         userRepository.save(user)
     }
 
@@ -64,6 +64,15 @@ class TransactionServiceTest {
         assertThat(response.symbol).isEqualTo(SYMBOL)
         assertThat(response.intendedPrice).isEqualTo(validCreationPayload.intendedPrice)
         assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
+    }
+
+    @Test
+    @Transactional
+    fun `when all active transactions are requested, then they are returned`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+
+        assertThat(transactionService.getActiveTransactions()).singleElement().extracting("id")
+            .isEqualTo(transaction.operationId)
     }
 
     private fun validCreationPayload() = TransactionCreationDTO(SYMBOL, 15.0, OperationType.BUY)

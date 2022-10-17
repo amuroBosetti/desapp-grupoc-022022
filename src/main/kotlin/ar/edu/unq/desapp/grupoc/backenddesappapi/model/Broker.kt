@@ -2,7 +2,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import java.lang.Math.abs
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 
 
@@ -52,7 +52,7 @@ class Broker(
         findTransactionById(transactionId).informTransfer()
     }
 
-    fun confirmReception(transactionId: UUID, now: LocalDateTime) {
+    fun confirmReception(transactionId: UUID, now: Instant) {
         val transaction = findTransactionById(transactionId)
         transaction.confirmReception()
         scoreTracker.trackTransferReception(transaction, now)
@@ -85,5 +85,9 @@ class Broker(
 
     private fun findTransactionById(transactionId: UUID) =
         transactionRepository.findById(transactionId).get()
+
+    fun activeTransactions(): List<Transaction> {
+        return transactionRepository.findAllByStatus(TransactionStatus.ACTIVE)
+    }
 
 }

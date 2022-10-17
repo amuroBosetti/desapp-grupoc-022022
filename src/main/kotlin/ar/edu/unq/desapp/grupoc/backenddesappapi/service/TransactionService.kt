@@ -3,6 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Broker
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
@@ -42,6 +43,10 @@ class TransactionService {
         }
         return userRepository.findByEmail(userEmail)
             ?: throw NotRegisteredUserException(userEmail)
+    }
+
+    fun getActiveTransactions(): List<Transaction> {
+        return broker.activeTransactions()
     }
 
 }
