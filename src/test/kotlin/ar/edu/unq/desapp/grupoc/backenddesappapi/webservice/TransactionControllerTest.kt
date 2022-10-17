@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
@@ -21,8 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 import java.util.function.Consumer
@@ -148,6 +148,18 @@ class TransactionControllerTest {
                 }
             }
         )
+    }
+
+    @Test
+    fun `when a transaction is processed but the request is from the user who created the transaction, then it fails`() {
+        every { transactionService.processTransaction() }.throws(TransactionWithSameUserInBothSidesException(
+            CREATED_OPERATION_ID
+        ))
+
+          mockMvc.perform(
+              put("/transaction/{id}", CREATED_OPERATION_ID.toString())
+                  .contentType(MediaType.APPLICATION_JSON))
+              .andExpect(status().isUnauthorized)
     }
 
     private fun mockOneActiveTransactionsResponse(): Transaction {

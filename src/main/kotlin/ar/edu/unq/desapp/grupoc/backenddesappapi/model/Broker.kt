@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import java.lang.Math.abs
 import java.time.Instant
@@ -14,10 +15,7 @@ class Broker(
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
     fun expressOperationIntent(
-        user: BrokerUser,
-        operationType: OperationType,
-        intendedPrice: Double,
-        cryptoSymbol: String
+        user: BrokerUser, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String
     ): Transaction {
         //TODO obtener la quotation desde el quotationService
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
@@ -39,12 +37,22 @@ class Broker(
         operationType: OperationType,
         latestQuotation: Double
     ) {
-        val transaction = findTransactionById(transactionId)
+        val transaction = transaction(transactionId)
+        validatePriceBand(transaction, latestQuotation)
+        validateUsers(transaction, acceptingUser)
+        transaction.accept(acceptingUser, operationType, latestQuotation)
+    }
+
+    private fun validateUsers(transaction: Transaction, secondUser: BrokerUser) {
+        if (transaction.firstUser == secondUser){
+            throw TransactionWithSameUserInBothSidesException(transaction.id!!)
+        }
+    }
+
+    private fun validatePriceBand(transaction: Transaction, latestQuotation: Double) {
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
-        } else {
-            transaction.accept(acceptingUser, operationType, latestQuotation)
         }
     }
 
@@ -62,6 +70,8 @@ class Broker(
         findTransactionById(transactionId).cancel()
         scoreTracker.trackTransactionCancellation(cancellingUser)
     }
+
+    private fun transaction(transactionId: UUID) = findTransactionById(transactionId)
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
         val latestPrice = latestQuotation(cryptoSymbol)!!
@@ -83,8 +93,7 @@ class Broker(
         return percentageDifference > percentage
     }
 
-    private fun findTransactionById(transactionId: UUID) =
-        transactionRepository.findById(transactionId).get()
+    private fun findTransactionById(transactionId: UUID) = transactionRepository.findById(transactionId).get()
 
     fun activeTransactions(): List<Transaction> {
         return transactionRepository.findAllByStatus(TransactionStatus.ACTIVE)

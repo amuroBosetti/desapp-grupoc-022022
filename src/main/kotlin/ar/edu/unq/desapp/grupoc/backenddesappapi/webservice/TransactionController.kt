@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
+import java.util.*
 import javax.validation.Valid
 
 @Controller
@@ -42,6 +43,14 @@ class TransactionController {
         } catch (e: NotRegisteredUserException) {
             ResponseEntity(HttpStatus.UNAUTHORIZED)
         }
+    }
+
+    @RequestMapping("/transaction", method = [RequestMethod.PUT])
+    fun processTransaction(
+        @RequestHeader("user") userEmail: String,
+        @RequestParam transactionId : UUID
+    ){
+        transactionService.processTransaction()
     }
 
     @RequestMapping("/transaction/active", method = [RequestMethod.GET])

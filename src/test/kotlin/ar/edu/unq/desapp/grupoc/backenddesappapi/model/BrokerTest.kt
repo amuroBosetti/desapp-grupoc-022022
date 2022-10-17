@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -90,6 +91,17 @@ class BrokerTest {
         @BeforeEach
         fun setUp() {
             transaction = broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
+        }
+
+        @Test
+        fun `when the same user tries to accept the transaction, then it fails and the transaction is not processed`() {
+            assertThatThrownBy { broker.processTransaction(transaction.id!!, user, OperationType.SELL, aPrice) }
+                .isInstanceOf(TransactionWithSameUserInBothSidesException::class.java)
+                .hasMessage("Cannot process transaction with id ${transaction.id!!} because both sides are the same user")
+
+            val transaction = broker.findTransactionsOf(user).first()
+            assertThat(transaction.secondUser).isNull()
+            assertThat(transaction.status).isEqualTo(TransactionStatus.ACTIVE)
         }
 
         @Test
