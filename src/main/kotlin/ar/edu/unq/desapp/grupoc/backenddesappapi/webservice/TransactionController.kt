@@ -1,6 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -33,6 +35,11 @@ class TransactionController {
         return ResponseEntity(HttpStatus.BAD_REQUEST)
     }
 
+    @ExceptionHandler(HTTPClientException::class)
+    fun handleException(exception: HTTPClientException): ResponseEntity<String> {
+        return ResponseEntity(exception.returnMessage, exception.status)
+    }
+
     @RequestMapping("/transaction", method = [RequestMethod.POST])
     fun createTransaction(
         @RequestHeader("user") userEmail: String,
@@ -45,12 +52,20 @@ class TransactionController {
         }
     }
 
-    @RequestMapping("/transaction", method = [RequestMethod.PUT])
+    @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     fun processTransaction(
         @RequestHeader("user") userEmail: String,
-        @RequestParam transactionId : UUID
-    ){
-        transactionService.processTransaction()
+        @PathVariable id : UUID,
+        @RequestBody transactionUpdateRequestDTO: TransactionUpdateRequestDTO
+    ) : ResponseEntity<TransactionUpdateResponseDTO> {
+        return try {
+            val transaction = transactionService.processTransaction()
+            ResponseEntity(TransactionUpdateResponseDTO(transaction.status), HttpStatus.OK)
+        } catch (e: TransactionWithSameUserInBothSidesException) {
+            throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
+        } catch (e: TransactionNotFoundException){
+            throw HTTPClientException(e.message!!, HttpStatus.NOT_FOUND)
+        }
     }
 
     @RequestMapping("/transaction/active", method = [RequestMethod.GET])

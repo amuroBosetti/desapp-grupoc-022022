@@ -49,7 +49,7 @@ class TransactionService {
         return broker.activeTransactions()
     }
 
-    fun processTransaction() {
+    fun processTransaction() : Transaction {
         TODO("Not yet implemented")
     }
 

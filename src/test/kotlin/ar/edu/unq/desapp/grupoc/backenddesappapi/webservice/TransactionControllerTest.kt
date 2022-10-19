@@ -1,9 +1,11 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
 import com.fasterxml.jackson.databind.json.JsonMapper
@@ -152,14 +154,53 @@ class TransactionControllerTest {
 
     @Test
     fun `when a transaction is processed but the request is from the user who created the transaction, then it fails`() {
-        every { transactionService.processTransaction() }.throws(TransactionWithSameUserInBothSidesException(
-            CREATED_OPERATION_ID
-        ))
+        every { transactionService.processTransaction() }.throws(
+            TransactionWithSameUserInBothSidesException(
+                CREATED_OPERATION_ID
+            )
+        )
 
-          mockMvc.perform(
-              put("/transaction/{id}", CREATED_OPERATION_ID.toString())
-                  .contentType(MediaType.APPLICATION_JSON))
-              .andExpect(status().isUnauthorized)
+        mockMvc.perform(
+            put("/transaction/{id}", CREATED_OPERATION_ID.toString())
+                .header("user", EXISTING_USER)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `when an inexisting transaction is processed, then it fails`() {
+        every { transactionService.processTransaction() }.throws(TransactionNotFoundException(CREATED_OPERATION_ID))
+
+        mockMvc.perform(
+            put("/transaction/{id}", CREATED_OPERATION_ID.toString())
+                .header("user", EXISTING_USER)
+                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO("notifyTransfer").toString()))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `when a transaction is processed successfully, then it is returned in its new status`() {
+        val transactionStatus = TransactionStatus.WAITING_CONFIRMATION
+        every { transactionService.processTransaction() }.returns(
+            TransactionFixture.aTransaction(
+                EXISTING_USER,
+                transactionStatus
+            )
+        )
+
+        val stringResponse = mockMvc.perform(
+            put("/transaction/{id}", CREATED_OPERATION_ID.toString())
+                .header("user", EXISTING_USER)
+                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO("notifyTransfer").toString()))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk).andReturn().response.contentAsString
+
+        val responseDTO = jacksonObjectMapper().readValue<TransactionUpdateResponseDTO>(stringResponse)
+        assertThat(responseDTO.status).isEqualTo(transactionStatus)
     }
 
     private fun mockOneActiveTransactionsResponse(): Transaction {
