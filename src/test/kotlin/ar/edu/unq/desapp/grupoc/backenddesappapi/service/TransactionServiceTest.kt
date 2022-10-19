@@ -1,7 +1,9 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.UserFixture
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
@@ -12,8 +14,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 private const val VALID_USER = "validuser@gmail.com"
+private const val ANOTHER_VALID_USER = "anothervaliduser@gmail.com"
 
 private const val SYMBOL = "BNBUSDT"
 
@@ -28,8 +32,8 @@ class TransactionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        val user = UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345678", 5L)
-        userRepository.save(user)
+        userRepository.save(UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345578"))
+        userRepository.save(UserFixture.aUser(ANOTHER_VALID_USER, "8506368711100060517136", "82345678"))
     }
 
     @Test
@@ -73,6 +77,26 @@ class TransactionServiceTest {
 
         assertThat(transactionService.getActiveTransactions()).singleElement().extracting("id")
             .isEqualTo(transaction.operationId)
+    }
+
+    @Test
+    @Transactional
+    fun `when an unexisting transaction is processed, then it fails`() {
+        val nonExistingTransactionId = UUID.randomUUID()
+        assertThatThrownBy { transactionService.processTransaction(nonExistingTransactionId, ANOTHER_VALID_USER) }
+            .isInstanceOf(TransactionNotFoundException::class.java)
+            .hasMessage("Could not find transaction with id $nonExistingTransactionId")
+    }
+
+    @Test
+    @Transactional
+    fun `when an active transaction is processed, then it is returned with its new status`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+
+        val processedTransaction = transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER)
+
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
+        assertThat(processedTransaction.secondUser?.email).isEqualTo(ANOTHER_VALID_USER)
     }
 
     private fun validCreationPayload() = TransactionCreationDTO(SYMBOL, 15.0, OperationType.BUY)

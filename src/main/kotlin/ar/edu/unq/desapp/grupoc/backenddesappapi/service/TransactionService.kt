@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Broker
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
@@ -10,6 +11,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationD
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationResponseDTO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.annotation.PostConstruct
 
 @Service
@@ -49,8 +51,13 @@ class TransactionService {
         return broker.activeTransactions()
     }
 
-    fun processTransaction() : Transaction {
-        TODO("Not yet implemented")
+    fun processTransaction(transactionId: UUID, userEmail: String): Transaction {
+        val acceptingUser = userRepository.findByEmail(userEmail)
+        val transaction = transactionRepository.findById(transactionId).orElseThrow {
+            TransactionNotFoundException(transactionId)
+        }
+        val latestQuotation = 15.0 //TODO agregar quotationservice cuando este
+        return broker.processTransaction(transaction, acceptingUser!!, latestQuotation)
     }
 
 }

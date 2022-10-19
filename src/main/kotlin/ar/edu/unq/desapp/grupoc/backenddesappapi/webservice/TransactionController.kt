@@ -55,15 +55,18 @@ class TransactionController {
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     fun processTransaction(
         @RequestHeader("user") userEmail: String,
-        @PathVariable id : UUID,
+        @PathVariable id: UUID,
         @RequestBody transactionUpdateRequestDTO: TransactionUpdateRequestDTO
-    ) : ResponseEntity<TransactionUpdateResponseDTO> {
+    ): ResponseEntity<TransactionUpdateResponseDTO> {
         return try {
-            val transaction = transactionService.processTransaction()
+            val transaction = transactionService.processTransaction(
+                id,
+                userEmail
+            )
             ResponseEntity(TransactionUpdateResponseDTO(transaction.status), HttpStatus.OK)
         } catch (e: TransactionWithSameUserInBothSidesException) {
             throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
-        } catch (e: TransactionNotFoundException){
+        } catch (e: TransactionNotFoundException) {
             throw HTTPClientException(e.message!!, HttpStatus.NOT_FOUND)
         }
     }

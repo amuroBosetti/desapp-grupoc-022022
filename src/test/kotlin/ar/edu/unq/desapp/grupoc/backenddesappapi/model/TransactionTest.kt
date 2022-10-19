@@ -29,7 +29,7 @@ class TransactionTest {
     fun `when an active transaction is accepted by another user, then it's status is pending and the accepting user and quotation are saved`() {
         val transaction : Transaction = getActiveTransaction()
 
-        transaction.accept(acceptingUser, OperationType.SELL, intendedPrice)
+        transaction.accept(acceptingUser, intendedPrice)
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.PENDING)
         assertThat(transaction.secondUser).isEqualTo(acceptingUser)
@@ -80,7 +80,7 @@ class TransactionTest {
     fun `when a user accepts a non active transaction, then an exception is thrown`() {
         val transaction = getPendingTransaction()
 
-        assertThatThrownBy { transaction.accept(acceptingUser, OperationType.SELL, intendedPrice) }
+        assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
             .isInstanceOf(RuntimeException::class.java)
             .hasMessage("Invalid status PENDING for action ACCEPT TRANSACTION")
 
@@ -91,7 +91,7 @@ class TransactionTest {
     fun `when a user tries to do anything with a cancelled transaction, then an exception is thrown`() {
         val transaction = getCancelledTransaction()
 
-        assertThatThrownBy { transaction.accept(acceptingUser, OperationType.SELL, intendedPrice) }
+        assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
             .isInstanceOf(RuntimeException::class.java)
             .hasMessage("Invalid status CANCELLED for action ACCEPT TRANSACTION")
 
@@ -102,7 +102,7 @@ class TransactionTest {
     fun `when a user tries to do anything with a completed transaction, then an exception is thrown`() {
         val transaction = getCompletedTransaction()
 
-        assertThatThrownBy { transaction.accept(acceptingUser, OperationType.SELL, intendedPrice) }
+        assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
             .isInstanceOf(RuntimeException::class.java)
             .hasMessage("Invalid status COMPLETED for action ACCEPT TRANSACTION")
 
@@ -129,7 +129,7 @@ class TransactionTest {
 
     private fun getPendingTransaction(): Transaction {
         val transaction = getActiveTransaction()
-        transaction.accept(acceptingUser, OperationType.SELL, intendedPrice)
+        transaction.accept(acceptingUser, intendedPrice)
         return transaction
     }
 

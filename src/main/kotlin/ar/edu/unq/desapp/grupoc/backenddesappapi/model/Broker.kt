@@ -32,15 +32,13 @@ class Broker(
     }
 
     fun processTransaction(
-        transactionId: UUID,
+        transaction: Transaction,
         acceptingUser: BrokerUser,
-        operationType: OperationType,
         latestQuotation: Double
-    ) {
-        val transaction = transaction(transactionId)
+    ): Transaction {
         validatePriceBand(transaction, latestQuotation)
         validateUsers(transaction, acceptingUser)
-        transaction.accept(acceptingUser, operationType, latestQuotation)
+        return transaction.accept(acceptingUser, latestQuotation)
     }
 
     private fun validateUsers(transaction: Transaction, secondUser: BrokerUser) {
@@ -70,8 +68,6 @@ class Broker(
         findTransactionById(transactionId).cancel()
         scoreTracker.trackTransactionCancellation(cancellingUser)
     }
-
-    private fun transaction(transactionId: UUID) = findTransactionById(transactionId)
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
         val latestPrice = latestQuotation(cryptoSymbol)!!

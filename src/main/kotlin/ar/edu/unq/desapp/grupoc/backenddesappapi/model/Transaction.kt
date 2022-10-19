@@ -23,17 +23,11 @@ class Transaction(
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: UUID? = null
 
-    fun accept(secondUser: BrokerUser, secondUserIntent: OperationType, latestQuotation: Double) {
-        validateCompatibleIntents(secondUserIntent)
+    fun accept(secondUser: BrokerUser, latestQuotation: Double) : Transaction {
         status = status.accept()
         this.secondUser = secondUser
         this.quotation = latestQuotation
-    }
-
-    private fun validateCompatibleIntents(secondUserIntent: OperationType) {
-        if (secondUserIntent == operationType) {
-            throw RuntimeException("Cannot process a transaction where both user intents is $operationType")
-        }
+        return this
     }
 
     fun isPending(): Boolean {
