@@ -56,12 +56,13 @@ class TransactionController {
     fun processTransaction(
         @RequestHeader("user") userEmail: String,
         @PathVariable id: UUID,
-        @RequestBody transactionUpdateRequestDTO: TransactionUpdateRequestDTO
+        @RequestBody updateRequest: TransactionUpdateRequestDTO
     ): ResponseEntity<TransactionUpdateResponseDTO> {
         return try {
             val transaction = transactionService.processTransaction(
                 id,
-                userEmail
+                userEmail,
+                updateRequest.action
             )
             ResponseEntity(TransactionUpdateResponseDTO(transaction.status), HttpStatus.OK)
         } catch (e: TransactionWithSameUserInBothSidesException) {

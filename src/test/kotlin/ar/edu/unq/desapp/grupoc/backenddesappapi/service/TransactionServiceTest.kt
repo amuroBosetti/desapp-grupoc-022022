@@ -1,10 +1,12 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.InvalidTransactionStatusException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.UserFixture
+import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import org.assertj.core.api.Assertions.assertThat
@@ -29,6 +31,9 @@ class TransactionServiceTest {
 
     @Autowired
     private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var transactionRepository: TransactionRepository
 
     @BeforeEach
     fun setUp() {
@@ -83,7 +88,11 @@ class TransactionServiceTest {
     @Transactional
     fun `when an unexisting transaction is processed, then it fails`() {
         val nonExistingTransactionId = UUID.randomUUID()
-        assertThatThrownBy { transactionService.processTransaction(nonExistingTransactionId, ANOTHER_VALID_USER) }
+        assertThatThrownBy { transactionService.processTransaction(
+            nonExistingTransactionId,
+            ANOTHER_VALID_USER,
+            "anyAction"
+        ) }
             .isInstanceOf(TransactionNotFoundException::class.java)
             .hasMessage("Could not find transaction with id $nonExistingTransactionId")
     }
@@ -93,8 +102,29 @@ class TransactionServiceTest {
     fun `when an active transaction is processed, then it is returned with its new status`() {
         val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
 
-        val processedTransaction = transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER)
+        val processedTransaction = transactionService.processTransaction(
+            transaction.operationId,
+            ANOTHER_VALID_USER,
+            "anyAction"
+        )
 
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
+        assertThat(processedTransaction.secondUser?.email).isEqualTo(ANOTHER_VALID_USER)
+    }
+
+    @Test
+    @Transactional
+    fun `when an active transaction is processed but the action is not valid for status, then it fails and the transaction is not processed`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+
+        assertThatThrownBy { transactionService.processTransaction(
+            transaction.operationId,
+            ANOTHER_VALID_USER,
+            "anyAction"
+        ) }
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
         assertThat(processedTransaction.secondUser?.email).isEqualTo(ANOTHER_VALID_USER)
     }

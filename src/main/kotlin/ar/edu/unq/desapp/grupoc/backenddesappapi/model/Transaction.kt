@@ -34,8 +34,9 @@ class Transaction(
         return this.status == TransactionStatus.PENDING
     }
 
-    fun informTransfer() {
+    fun informTransfer(): Transaction {
         this.status = this.status.informTransfer()
+        return this
     }
 
     fun confirmReception() {
@@ -44,6 +45,19 @@ class Transaction(
 
     fun cancel() {
         this.status = TransactionStatus.CANCELLED
+    }
+
+    fun confirmTransferReception() {
+        this.status = this.status.confirmTransferReception()
+    }
+
+    fun confirmCryptoTransferReception() {
+        this.status = this.status.confirmCryptoTransferReception()
+    }
+
+    fun informCryptoTransfer(): Transaction {
+        this.status = this.status.informCryptoTransfer()
+        return this
     }
 
 }

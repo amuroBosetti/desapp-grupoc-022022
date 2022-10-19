@@ -5,6 +5,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundEx
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Broker
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
@@ -51,13 +52,13 @@ class TransactionService {
         return broker.activeTransactions()
     }
 
-    fun processTransaction(transactionId: UUID, userEmail: String): Transaction {
+    fun processTransaction(transactionId: UUID, userEmail: String, action: String): Transaction {
         val acceptingUser = userRepository.findByEmail(userEmail)
         val transaction = transactionRepository.findById(transactionId).orElseThrow {
             TransactionNotFoundException(transactionId)
         }
         val latestQuotation = 15.0 //TODO agregar quotationservice cuando este
-        return broker.processTransaction(transaction, acceptingUser!!, latestQuotation)
+        return broker.processTransaction(transaction, acceptingUser!!, latestQuotation, TransactionAction.ACCEPT)
     }
 
 }

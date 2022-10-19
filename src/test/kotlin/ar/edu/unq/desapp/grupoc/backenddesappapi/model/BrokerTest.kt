@@ -77,12 +77,6 @@ class BrokerTest {
             .hasMessage("Cannot express a transaction intent with a price 5 lower than the latest quotation")
     }
 
-    @Test
-    fun `when a user expresses a buying intent with a price within the 5% price range then there is an active transaction `(){
-
-
-    }
-
     @Nested
     @DisplayName("given a user who has expressed their buying intent")
     inner class BuyOperationTypeAlreadyExpressed {
@@ -95,7 +89,7 @@ class BrokerTest {
 
         @Test
         fun `when the same user tries to accept the transaction, then it fails and the transaction is not processed`() {
-            assertThatThrownBy { broker.processTransaction(transaction, user, aPrice) }
+            assertThatThrownBy { broker.processTransaction(transaction, user, aPrice, TransactionAction.ACCEPT) }
                 .isInstanceOf(TransactionWithSameUserInBothSidesException::class.java)
                 .hasMessage("Cannot process transaction with id ${transaction.id!!} because both sides are the same user")
 
@@ -106,7 +100,7 @@ class BrokerTest {
 
         @Test
         fun `when another user intending to sell accepts the transaction, then that transaction is in status pending`() {
-            broker.processTransaction(transaction, anotherUser, aPrice)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
 
             val processedTransaction = broker.pendingTransactions().first()
             assertThat(processedTransaction.secondUser).usingRecursiveComparison().isEqualTo(anotherUser)
@@ -116,7 +110,7 @@ class BrokerTest {
         @Test
         fun `when another user intending to sell accepts the transaction, then that transaction uses the most recent quotation`() {
             val quotation = 1.05
-            broker.processTransaction(transaction, anotherUser, quotation)
+            broker.processTransaction(transaction, anotherUser, quotation, TransactionAction.ACCEPT)
 
             val processedTransaction = broker.pendingTransactions().first()
             assertThat(processedTransaction.quotation).isEqualTo(quotation)
@@ -134,7 +128,8 @@ class BrokerTest {
                 broker.processTransaction(
                     transaction,
                     anotherUser,
-                    quotationOutsidePriceBand
+                    quotationOutsidePriceBand,
+                    TransactionAction.ACCEPT
                 )
             }
                 .isInstanceOf(RuntimeException::class.java)
@@ -146,9 +141,9 @@ class BrokerTest {
 
         @Test
         fun `when another user accepts the transaction and informs transfer has been completed, then the transaction is waiting confirmation`() {
-            broker.processTransaction(transaction, anotherUser, aPrice)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
 
-            broker.informTransfer(transaction.id!!)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
@@ -156,10 +151,35 @@ class BrokerTest {
 
         @Test
         fun `when another user accepts the transaction and informs transfer, then the receiving user can confirm the reception`() {
-            broker.processTransaction(transaction, anotherUser, aPrice)
-            broker.informTransfer(transaction.id!!)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
 
-            broker.confirmReception(transaction.id!!, transaction.createadAt)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.PENDING_CRYPTO_TRANSFER)
+        }
+
+        @Test
+        fun `when the transfer reception has been confirmed, then the seller can inform the crypto transfer`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
+        }
+
+        @Test
+        fun `when the buyer confirms the crypto reception, then the transaction is completed`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
+
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.COMPLETED)
@@ -167,7 +187,7 @@ class BrokerTest {
 
         @Test
         fun `when another user accepts the transaction but the original cancels it, then the transaction is cancelled`() {
-            broker.processTransaction(transaction, anotherUser, aPrice)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
 
             broker.cancelTransaction(transaction.id!!, user)
 
@@ -196,9 +216,11 @@ class BrokerTest {
         }
 
         private fun completeTransaction() {
-            broker.processTransaction(transaction, anotherUser, aPrice)
-            broker.informTransfer(transaction.id!!)
-            broker.confirmReception(transaction.id!!, transaction.createadAt)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
         }
     }
 

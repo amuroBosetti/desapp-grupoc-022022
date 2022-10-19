@@ -34,15 +34,45 @@ class Broker(
     fun processTransaction(
         transaction: Transaction,
         acceptingUser: BrokerUser,
-        latestQuotation: Double
+        latestQuotation: Double,
+        action: TransactionAction
     ): Transaction {
-        validatePriceBand(transaction, latestQuotation)
-        validateUsers(transaction, acceptingUser)
-        return transaction.accept(acceptingUser, latestQuotation)
+        return when (action) {
+            TransactionAction.ACCEPT -> {
+                validatePriceBand(transaction, latestQuotation)
+                validateUsers(transaction, acceptingUser)
+                transaction.accept(acceptingUser, latestQuotation)
+            }
+            TransactionAction.INFORM_TRANSFER -> {
+                informTransfer(transaction.id!!)
+            }
+            TransactionAction.CONFIRM_TRANSFER_RECEPTION -> {
+                confirmTransferReception(transaction.id!!)
+            }
+            TransactionAction.INFORM_CRYPTO_TRANSFER -> {
+                informCryptoTransfer(transaction.id!!)
+            }
+            TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION -> {
+                confirmCryptoTransferReception(transaction.id!!)
+            }
+        }
+    }
+
+    private fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
+        val transaction = findTransactionById(transactionId)
+        transaction.confirmCryptoTransferReception()
+        scoreTracker.trackTransferReception(transaction, Instant.now())
+        return transaction
+    }
+
+    private fun confirmTransferReception(transactionId: UUID): Transaction {
+        val transaction = findTransactionById(transactionId)
+        transaction.confirmTransferReception()
+        return transaction
     }
 
     private fun validateUsers(transaction: Transaction, secondUser: BrokerUser) {
-        if (transaction.firstUser == secondUser){
+        if (transaction.firstUser == secondUser) {
             throw TransactionWithSameUserInBothSidesException(transaction.id!!)
         }
     }
@@ -54,14 +84,12 @@ class Broker(
         }
     }
 
-    fun informTransfer(transactionId: UUID) {
-        findTransactionById(transactionId).informTransfer()
+    private fun informCryptoTransfer(transactionId: UUID): Transaction {
+        return findTransactionById(transactionId).informCryptoTransfer()
     }
 
-    fun confirmReception(transactionId: UUID, now: Instant) {
-        val transaction = findTransactionById(transactionId)
-        transaction.confirmReception()
-        scoreTracker.trackTransferReception(transaction, now)
+    private fun informTransfer(transactionId: UUID): Transaction {
+        return findTransactionById(transactionId).informTransfer()
     }
 
     fun cancelTransaction(transactionId: UUID, cancellingUser: BrokerUser) {

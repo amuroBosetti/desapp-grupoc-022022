@@ -154,7 +154,7 @@ class TransactionControllerTest {
 
     @Test
     fun `when a transaction is processed but the request is from the user who created the transaction, then it fails`() {
-        every { transactionService.processTransaction(any(), any()) }.throws(
+        every { transactionService.processTransaction(any(), any(), any()) }.throws(
             TransactionWithSameUserInBothSidesException(
                 CREATED_OPERATION_ID
             )
@@ -170,7 +170,7 @@ class TransactionControllerTest {
 
     @Test
     fun `when an inexisting transaction is processed, then it fails`() {
-        every { transactionService.processTransaction(any(), any()) }.throws(TransactionNotFoundException(CREATED_OPERATION_ID))
+        every { transactionService.processTransaction(any(), any(), any()) }.throws(TransactionNotFoundException(CREATED_OPERATION_ID))
 
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
@@ -184,7 +184,7 @@ class TransactionControllerTest {
     @Test
     fun `when a transaction is processed successfully, then it is returned in its new status`() {
         val transactionStatus = TransactionStatus.WAITING_CONFIRMATION
-        every { transactionService.processTransaction(any(), any()) }.returns(
+        every { transactionService.processTransaction(any(), any(), any()) }.returns(
             TransactionFixture.aTransaction(
                 EXISTING_USER,
                 transactionStatus
