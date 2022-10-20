@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.InvalidTransactionStatusException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -59,8 +60,8 @@ class TransactionTest {
         val transaction = getPendingTransaction()
 
         assertThatThrownBy { transaction.confirmReception() }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("Invalid status PENDING for action CONFIRM RECEPTION")
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+            .hasMessage("Invalid status PENDING for action ${TransactionAction.CONFIRM_TRANSFER_RECEPTION}")
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.PENDING)
     }
@@ -70,8 +71,8 @@ class TransactionTest {
         val transaction = getActiveTransaction()
 
         assertThatThrownBy { transaction.informTransfer() }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("Invalid status ACTIVE for action INFORM TRANSFER")
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+            .hasMessage("Invalid status ACTIVE for action ${TransactionAction.INFORM_TRANSFER}")
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.ACTIVE)
     }
@@ -81,8 +82,8 @@ class TransactionTest {
         val transaction = getPendingTransaction()
 
         assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("Invalid status PENDING for action ACCEPT TRANSACTION")
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+            .hasMessage("Invalid status PENDING for action ${TransactionAction.ACCEPT}")
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.PENDING)
     }
@@ -92,8 +93,8 @@ class TransactionTest {
         val transaction = getCancelledTransaction()
 
         assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("Invalid status CANCELLED for action ACCEPT TRANSACTION")
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+            .hasMessage("Invalid status CANCELLED for action ${TransactionAction.ACCEPT}")
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.CANCELLED)
     }
@@ -103,8 +104,8 @@ class TransactionTest {
         val transaction = getCompletedTransaction()
 
         assertThatThrownBy { transaction.accept(acceptingUser, intendedPrice) }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("Invalid status COMPLETED for action ACCEPT TRANSACTION")
+            .isInstanceOf(InvalidTransactionStatusException::class.java)
+            .hasMessage("Invalid status COMPLETED for action ${TransactionAction.ACCEPT}")
 
         assertThat(transaction.status).isEqualTo(TransactionStatus.COMPLETED)
     }

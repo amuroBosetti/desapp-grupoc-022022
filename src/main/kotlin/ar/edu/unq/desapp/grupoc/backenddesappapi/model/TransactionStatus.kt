@@ -1,5 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.InvalidTransactionStatusException
+
 enum class TransactionStatus {
     PENDING {
         override fun informTransfer(): TransactionStatus{
@@ -34,27 +36,26 @@ enum class TransactionStatus {
     CANCELLED;
 
     open fun confirmReception(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("CONFIRM RECEPTION"))
+        throw InvalidTransactionStatusException(this, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
     }
 
     open fun confirmTransferReception(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("CONFIRM TRANSFER RECEPTION"))
+        throw InvalidTransactionStatusException(this, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
     }
 
     open fun informTransfer(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("INFORM TRANSFER"))
+        throw InvalidTransactionStatusException(this, TransactionAction.INFORM_TRANSFER)
     }
 
     open fun accept(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("ACCEPT TRANSACTION"))
+        throw InvalidTransactionStatusException(this, TransactionAction.ACCEPT)
     }
     open fun informCryptoTransfer(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("INFORM CRYPTO TRANSFER"))
+        throw InvalidTransactionStatusException(this, TransactionAction.INFORM_CRYPTO_TRANSFER)
     }
 
     open fun confirmCryptoTransferReception(): TransactionStatus {
-        throw RuntimeException(invalidStatusExceptionMessage("CONFIRM CRYPTO TRANSFER RECEPTION"))
+        throw InvalidTransactionStatusException(this, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
     }
-    private fun invalidStatusExceptionMessage(action: String) = "Invalid status $this for action $action"
 
 }

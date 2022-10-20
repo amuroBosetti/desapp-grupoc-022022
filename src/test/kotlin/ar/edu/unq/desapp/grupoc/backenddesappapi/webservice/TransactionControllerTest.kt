@@ -5,6 +5,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundEx
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
@@ -175,7 +176,7 @@ class TransactionControllerTest {
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
                 .header("user", EXISTING_USER)
-                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO("notifyTransfer").toString()))
+                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.INFORM_TRANSFER)))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isNotFound)
@@ -194,7 +195,7 @@ class TransactionControllerTest {
         val stringResponse = mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
                 .header("user", EXISTING_USER)
-                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO("notifyTransfer").toString()))
+                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.INFORM_TRANSFER)))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk).andReturn().response.contentAsString

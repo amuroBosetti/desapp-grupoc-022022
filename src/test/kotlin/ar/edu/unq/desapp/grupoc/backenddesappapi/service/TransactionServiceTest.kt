@@ -4,6 +4,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.InvalidTransactionSta
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.UserFixture
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
@@ -91,7 +92,7 @@ class TransactionServiceTest {
         assertThatThrownBy { transactionService.processTransaction(
             nonExistingTransactionId,
             ANOTHER_VALID_USER,
-            "anyAction"
+            TransactionAction.ACCEPT
         ) }
             .isInstanceOf(TransactionNotFoundException::class.java)
             .hasMessage("Could not find transaction with id $nonExistingTransactionId")
@@ -105,7 +106,7 @@ class TransactionServiceTest {
         val processedTransaction = transactionService.processTransaction(
             transaction.operationId,
             ANOTHER_VALID_USER,
-            "anyAction"
+            TransactionAction.ACCEPT
         )
 
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
@@ -120,13 +121,12 @@ class TransactionServiceTest {
         assertThatThrownBy { transactionService.processTransaction(
             transaction.operationId,
             ANOTHER_VALID_USER,
-            "anyAction"
+            TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION
         ) }
             .isInstanceOf(InvalidTransactionStatusException::class.java)
 
         val processedTransaction = transactionRepository.findById(transaction.operationId).get()
-        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
-        assertThat(processedTransaction.secondUser?.email).isEqualTo(ANOTHER_VALID_USER)
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.ACTIVE)
     }
 
     private fun validCreationPayload() = TransactionCreationDTO(SYMBOL, 15.0, OperationType.BUY)

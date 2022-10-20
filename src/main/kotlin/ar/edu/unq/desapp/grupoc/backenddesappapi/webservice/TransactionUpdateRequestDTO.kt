@@ -1,3 +1,5 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
-class TransactionUpdateRequestDTO(val action: String)
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
+
+class TransactionUpdateRequestDTO(val action: TransactionAction)
