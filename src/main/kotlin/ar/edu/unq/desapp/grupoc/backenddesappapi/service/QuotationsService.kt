@@ -1,17 +1,17 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFoundTokenException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
 import com.binance.api.client.BinanceApiClientFactory
 import com.binance.api.client.BinanceApiRestClient
-import com.binance.api.client.domain.DomainType
-import com.binance.api.client.domain.market.TickerPrice
+import com.binance.api.client.exception.BinanceApiException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class QuotationsService {
 
-    val tickers = mutableListOf<String>("ALICEUSDT",
+    val tickers = mutableListOf("ALICEUSDT",
         "MATICUSDT",
         "AXSUSDT",
         "AAVEUSDT",
@@ -38,8 +38,8 @@ class QuotationsService {
             return TickerPriceDTO(
                 symbol = client.getPrice(ticker).symbol,
                 price = client.getPrice(ticker).price)
-        } catch (e: Exception){
-            throw RuntimeException("Could not get the token price")
+        } catch (e: BinanceApiException){
+            throw CouldNotFoundTokenException()
         }
     }
 
@@ -48,8 +48,8 @@ class QuotationsService {
             return client.getAllPrices()
                 .filter { tickerPrice -> tickers.contains(tickerPrice.symbol) }
                 .map { tickerPrice -> TickerPriceDTO(symbol = tickerPrice.symbol, price = tickerPrice.price) }
-        } catch (e: Exception) {
-            throw RuntimeException("Could not get the token prices")
+        } catch (e: BinanceApiException) {
+            throw CouldNotFoundTokenException()
         }
     }
 }
