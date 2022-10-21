@@ -30,9 +30,6 @@ class QuotationsService {
     @Autowired
     lateinit var client: BinanceApiRestClient
 
-    @Autowired
-    lateinit var factory: BinanceApiClientFactory
-
     fun getTokenPrice(ticker: String?): TickerPriceDTO {
     try {
             return TickerPriceDTO(
