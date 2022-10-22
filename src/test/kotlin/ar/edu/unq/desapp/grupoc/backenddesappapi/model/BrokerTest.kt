@@ -142,8 +142,7 @@ class BrokerTest {
         @Test
         fun `when another user accepts the transaction and informs transfer has been completed, then the transaction is waiting confirmation`() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
-
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
@@ -152,7 +151,7 @@ class BrokerTest {
         @Test
         fun `when another user accepts the transaction and informs transfer, then the receiving user can confirm the reception`() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER)
 
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
 
@@ -163,7 +162,7 @@ class BrokerTest {
         @Test
         fun `when the transfer reception has been confirmed, then the seller can inform the crypto transfer`() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER)
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
 
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
@@ -175,11 +174,11 @@ class BrokerTest {
         @Test
         fun `when the buyer confirms the crypto reception, then the transaction is completed`() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER)
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
 
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
 
             val informedTransaction = broker.findTransactionsOf(user).first()
             assertThat(informedTransaction.status).isEqualTo(TransactionStatus.COMPLETED)
@@ -217,10 +216,10 @@ class BrokerTest {
 
         private fun completeTransaction() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.ACCEPT)
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER)
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
-            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
         }
     }
 

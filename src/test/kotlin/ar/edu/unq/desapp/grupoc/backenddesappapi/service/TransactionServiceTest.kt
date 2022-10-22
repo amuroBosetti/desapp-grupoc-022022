@@ -1,8 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.InvalidTransactionStatusException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
@@ -45,28 +45,32 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a transaction without a user is received, then it fails`() {
-        val validCreationPayload = validCreationPayload()
+        val validCreationPayload = validCreationPayload(OperationType.BUY)
 
-        assertThatThrownBy { transactionService.createTransaction("", validCreationPayload) }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("User email cannot be blank")
+        assertThatThrownBy { transactionService.createTransaction("", validCreationPayload) }.isInstanceOf(
+            RuntimeException::class.java
+        ).hasMessage("User email cannot be blank")
     }
 
     @Test
     @Transactional
     fun `when a transaction is received but user does not exist, then it fails`() {
         val notRegisteredUserEmail = "notRegisteredUser@gmail.com"
-        val validCreationPayload = validCreationPayload()
+        val validCreationPayload = validCreationPayload(OperationType.BUY)
 
-        assertThatThrownBy { transactionService.createTransaction(notRegisteredUserEmail, validCreationPayload) }
-            .isInstanceOf(NotRegisteredUserException::class.java)
+        assertThatThrownBy {
+            transactionService.createTransaction(
+                notRegisteredUserEmail,
+                validCreationPayload
+            )
+        }.isInstanceOf(NotRegisteredUserException::class.java)
             .hasMessage("User with email $notRegisteredUserEmail is not registered")
     }
 
     @Test
     @Transactional
-    fun `when a transaction is created, then it is returned`(){
-        val validCreationPayload = validCreationPayload()
+    fun `when a transaction is created, then it is returned`() {
+        val validCreationPayload = validCreationPayload(OperationType.BUY)
 
         val response = transactionService.createTransaction(VALID_USER, validCreationPayload)
 
@@ -79,7 +83,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when all active transactions are requested, then they are returned`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
 
         assertThat(transactionService.getActiveTransactions()).singleElement().extracting("id")
             .isEqualTo(transaction.operationId)
@@ -89,24 +93,35 @@ class TransactionServiceTest {
     @Transactional
     fun `when an unexisting transaction is processed, then it fails`() {
         val nonExistingTransactionId = UUID.randomUUID()
-        assertThatThrownBy { transactionService.processTransaction(
-            nonExistingTransactionId,
-            ANOTHER_VALID_USER,
-            TransactionAction.ACCEPT
-        ) }
-            .isInstanceOf(TransactionNotFoundException::class.java)
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                nonExistingTransactionId, ANOTHER_VALID_USER, TransactionAction.ACCEPT
+            )
+        }.isInstanceOf(TransactionNotFoundException::class.java)
             .hasMessage("Could not find transaction with id $nonExistingTransactionId")
     }
 
     @Test
     @Transactional
+    fun `when a transaction is processed but the user does not exists, then it fails`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val nonExistingUser = "nonExistingUser@gmail.com"
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId, nonExistingUser, TransactionAction.ACCEPT
+            )
+        }.isInstanceOf(NotRegisteredUserException::class.java)
+            .hasMessage("User with email $nonExistingUser is not registered")
+    }
+
+    @Test
+    @Transactional
     fun `when an active transaction is processed, then it is returned with its new status`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
 
         val processedTransaction = transactionService.processTransaction(
-            transaction.operationId,
-            ANOTHER_VALID_USER,
-            TransactionAction.ACCEPT
+            transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT
         )
 
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
@@ -116,18 +131,117 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when an active transaction is processed but the action is not valid for status, then it fails and the transaction is not processed`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload())
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
 
-        assertThatThrownBy { transactionService.processTransaction(
-            transaction.operationId,
-            ANOTHER_VALID_USER,
-            TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION
-        ) }
-            .isInstanceOf(InvalidTransactionStatusException::class.java)
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId, ANOTHER_VALID_USER, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
 
         val processedTransaction = transactionRepository.findById(transaction.operationId).get()
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.ACTIVE)
     }
 
-    private fun validCreationPayload() = TransactionCreationDTO(SYMBOL, 15.0, OperationType.BUY)
+    @Test
+    @Transactional
+    fun `when a transaction is processed by a user who is not part of it, then it fails and the transaction is not processed`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
+        val thirdUser =
+            userRepository.save(UserFixture.aUser("thirduser@gmail.com", "8506368711100060514136", "82349678"))
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId, thirdUser.email, TransactionAction.INFORM_TRANSFER
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
+            .hasMessage("User ${thirdUser.email} is not authorized to perform action ${TransactionAction.INFORM_TRANSFER} on transaction ${transaction.operationId}")
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
+    }
+
+    @Test
+    @Transactional
+    fun `when a pending transaction is processed by a user who does not have to inform a transfer, then it fails and the transaction is not processed`(){
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId,
+                ANOTHER_VALID_USER,
+                TransactionAction.INFORM_TRANSFER
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
+            .hasMessage("User $ANOTHER_VALID_USER is not authorized to perform action ${TransactionAction.INFORM_TRANSFER} on transaction ${transaction.operationId}")
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING)
+    }
+
+    @Test
+    @Transactional
+    fun `when a waiting confirmation transaction is processed by a user who does not have to confirm a transfer reception, then it fails and the transaction is not processed`(){
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.SELL))
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.INFORM_TRANSFER)
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId,
+                ANOTHER_VALID_USER,
+                TransactionAction.CONFIRM_TRANSFER_RECEPTION
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
+            .hasMessage("User $ANOTHER_VALID_USER is not authorized to perform action ${TransactionAction.CONFIRM_TRANSFER_RECEPTION} on transaction ${transaction.operationId}")
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
+    }
+
+    @Test
+    @Transactional
+    fun `when a pending crypto transfer transaction is processed by a user who does not have to inform crypto transfer, then it fails and the transaction is not processed`(){
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
+        transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.INFORM_TRANSFER)
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId,
+                VALID_USER,
+                TransactionAction.INFORM_CRYPTO_TRANSFER
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
+            .hasMessage("User $VALID_USER is not authorized to perform action ${TransactionAction.INFORM_CRYPTO_TRANSFER} on transaction ${transaction.operationId}")
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.PENDING_CRYPTO_TRANSFER)
+    }
+
+    @Test
+    @Transactional
+    fun `when a waiting crypto transfer confirmation transaction is processed by a user who does not have to confirm crypto transfer reception, then it fails and the transaction is not processed`(){
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.SELL))
+        transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.INFORM_TRANSFER)
+        transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+        transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.INFORM_CRYPTO_TRANSFER)
+
+        assertThatThrownBy {
+            transactionService.processTransaction(
+                transaction.operationId,
+                VALID_USER,
+                TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION
+            )
+        }.isInstanceOf(UnauthorizedUserForAction::class.java)
+            .hasMessage("User $VALID_USER is not authorized to perform action ${TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION} on transaction ${transaction.operationId}")
+
+        val processedTransaction = transactionRepository.findById(transaction.operationId).get()
+        assertThat(processedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
+    }
+
+    private fun validCreationPayload(operationType: OperationType) = TransactionCreationDTO(SYMBOL, 15.0, operationType)
+
 }

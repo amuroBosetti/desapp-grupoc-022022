@@ -35,7 +35,7 @@ class Transaction(
     }
 
     fun informTransfer(): Transaction {
-        this.status = this.status.informTransfer()
+        this.status = this.status.informTransfer(this)
         return this
     }
 

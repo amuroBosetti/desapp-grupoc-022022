@@ -53,12 +53,12 @@ class TransactionService {
     }
 
     fun processTransaction(transactionId: UUID, userEmail: String, action: TransactionAction): Transaction {
-        val acceptingUser = userRepository.findByEmail(userEmail)
+        val user = userRepository.findByEmail(userEmail) ?: throw NotRegisteredUserException(userEmail)
         val transaction = transactionRepository.findById(transactionId).orElseThrow {
             TransactionNotFoundException(transactionId)
         }
         val latestQuotation = 15.0 //TODO agregar quotationservice cuando este
-        return broker.processTransaction(transaction, acceptingUser!!, latestQuotation, action)
+        return broker.processTransaction(transaction, user, latestQuotation, action)
     }
 
 }

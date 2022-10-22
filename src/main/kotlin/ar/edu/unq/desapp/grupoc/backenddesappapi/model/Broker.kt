@@ -1,6 +1,5 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import java.lang.Math.abs
 import java.time.Instant
@@ -33,63 +32,42 @@ class Broker(
 
     fun processTransaction(
         transaction: Transaction,
-        acceptingUser: BrokerUser,
+        user: BrokerUser,
         latestQuotation: Double,
         action: TransactionAction
     ): Transaction {
-        return when (action) {
-            TransactionAction.ACCEPT -> {
-                validatePriceBand(transaction, latestQuotation)
-                validateUsers(transaction, acceptingUser)
-                transaction.accept(acceptingUser, latestQuotation)
-            }
-            TransactionAction.INFORM_TRANSFER -> {
-                informTransfer(transaction.id!!)
-            }
-            TransactionAction.CONFIRM_TRANSFER_RECEPTION -> {
-                confirmTransferReception(transaction.id!!)
-            }
-            TransactionAction.INFORM_CRYPTO_TRANSFER -> {
-                informCryptoTransfer(transaction.id!!)
-            }
-            TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION -> {
-                confirmCryptoTransferReception(transaction.id!!)
-            }
-        }
+        return action.processWith(transaction, user, latestQuotation, this)
     }
 
-    private fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
+    internal fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
         val transaction = findTransactionById(transactionId)
         transaction.confirmCryptoTransferReception()
         scoreTracker.trackTransferReception(transaction, Instant.now())
         return transaction
     }
 
-    private fun confirmTransferReception(transactionId: UUID): Transaction {
+    internal fun confirmTransferReception(transactionId: UUID): Transaction {
         val transaction = findTransactionById(transactionId)
         transaction.confirmTransferReception()
         return transaction
     }
 
-    private fun validateUsers(transaction: Transaction, secondUser: BrokerUser) {
-        if (transaction.firstUser == secondUser) {
-            throw TransactionWithSameUserInBothSidesException(transaction.id!!)
-        }
-    }
-
-    private fun validatePriceBand(transaction: Transaction, latestQuotation: Double) {
+    internal fun validatePriceBand(transaction: Transaction, latestQuotation: Double) {
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
         }
     }
 
-    private fun informCryptoTransfer(transactionId: UUID): Transaction {
+    internal fun informCryptoTransfer(transactionId: UUID): Transaction {
         return findTransactionById(transactionId).informCryptoTransfer()
     }
 
-    private fun informTransfer(transactionId: UUID): Transaction {
-        return findTransactionById(transactionId).informTransfer()
+    internal fun informTransfer(transaction: Transaction, user: BrokerUser): Transaction {
+        if (transaction.operationType == OperationType.SELL){
+            transaction.secondUser = user
+        }
+        return transaction.informTransfer()
     }
 
     fun cancelTransaction(transactionId: UUID, cancellingUser: BrokerUser) {
