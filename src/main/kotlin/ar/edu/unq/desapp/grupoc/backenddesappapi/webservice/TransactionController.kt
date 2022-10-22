@@ -4,6 +4,8 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserExce
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.validation.Valid
 
+@Tag(name = "Transactions", description = "Transaction service")
 @Controller
 class TransactionController {
 
@@ -40,6 +43,7 @@ class TransactionController {
         return ResponseEntity(exception.returnMessage, exception.status)
     }
 
+    @Operation(summary = "Create a new transaction")
     @RequestMapping("/transaction", method = [RequestMethod.POST])
     fun createTransaction(
         @RequestHeader("user") userEmail: String,
@@ -52,6 +56,9 @@ class TransactionController {
         }
     }
 
+
+    @Operation(summary = "Processes a transaction",
+        description = "This endpoint is used to move a transaction from one status to the other, for example when a user has to inform that they have sent money to the other one")
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     fun processTransaction(
         @RequestHeader("user") userEmail: String,
