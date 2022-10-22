@@ -23,25 +23,20 @@ class Transaction(
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: UUID? = null
 
-    fun accept(secondUser: BrokerUser, secondUserIntent: OperationType, latestQuotation: Double) {
-        validateCompatibleIntents(secondUserIntent)
+    fun accept(secondUser: BrokerUser, latestQuotation: Double) : Transaction {
         status = status.accept()
         this.secondUser = secondUser
         this.quotation = latestQuotation
-    }
-
-    private fun validateCompatibleIntents(secondUserIntent: OperationType) {
-        if (secondUserIntent == operationType) {
-            throw RuntimeException("Cannot process a transaction where both user intents is $operationType")
-        }
+        return this
     }
 
     fun isPending(): Boolean {
         return this.status == TransactionStatus.PENDING
     }
 
-    fun informTransfer() {
-        this.status = this.status.informTransfer()
+    fun informTransfer(): Transaction {
+        this.status = this.status.informTransfer(this)
+        return this
     }
 
     fun confirmReception() {
@@ -50,6 +45,19 @@ class Transaction(
 
     fun cancel() {
         this.status = TransactionStatus.CANCELLED
+    }
+
+    fun confirmTransferReception() {
+        this.status = this.status.confirmTransferReception()
+    }
+
+    fun confirmCryptoTransferReception() {
+        this.status = this.status.confirmCryptoTransferReception()
+    }
+
+    fun informCryptoTransfer(): Transaction {
+        this.status = this.status.informCryptoTransfer()
+        return this
     }
 
 }
