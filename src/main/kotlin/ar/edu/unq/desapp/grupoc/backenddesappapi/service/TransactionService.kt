@@ -23,9 +23,12 @@ class TransactionService {
     @Autowired
     private lateinit var transactionRepository: TransactionRepository
 
+    @Autowired
+    lateinit var quotationsService: QuotationsService
+
     @PostConstruct
     fun init() {
-        broker = Broker(hashMapOf(Pair("BNBUSDT", 15.0)), 5.0, transactionRepository)
+        broker = Broker(5.0, transactionRepository, quotationsService)
     }
 
     fun createTransaction(userEmail: String, transactionCreationDTO: TransactionCreationDTO):

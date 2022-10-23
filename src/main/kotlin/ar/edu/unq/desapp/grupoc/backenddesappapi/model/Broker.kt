@@ -1,15 +1,15 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
-import java.lang.Math.abs
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import java.time.Instant
 import java.util.*
 
 
 class Broker(
-    private val quotations: HashMap<String, Double>,
     var percentage: Double,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    val quotationsService: QuotationsService
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
@@ -19,7 +19,6 @@ class Broker(
         intendedPrice: Double,
         cryptoSymbol: String
     ): Transaction {
-        //TODO obtener la quotation desde el quotationService
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol)
         return transactionRepository.save(transaction)
@@ -64,22 +63,18 @@ class Broker(
     }
 
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
-        val latestPrice = latestQuotation(cryptoSymbol)!!
-        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice > latestPrice) {
+        val tickerPrice = quotationsService.getTokenPrice(cryptoSymbol).price.toDouble()
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, tickerPrice) && intendedPrice > tickerPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 higher than the latest quotation")
         }
-        if (priceDifferenceIsHigherThan(percentage, intendedPrice, latestPrice) && intendedPrice < latestPrice) {
+        if (priceDifferenceIsHigherThan(percentage, intendedPrice, tickerPrice) && intendedPrice < tickerPrice) {
             throw RuntimeException("Cannot express a transaction intent with a price 5 lower than the latest quotation")
         }
     }
 
-    private fun latestQuotation(cryptoSymbol: String): Double? {
-        return quotations[cryptoSymbol]
-    }
-
     private fun priceDifferenceIsHigherThan(percentage: Double, intendedPrice: Double, latestPrice: Double): Boolean {
         val priceDifference = intendedPrice - latestPrice
-        val percentageDifference = (abs(priceDifference) / latestPrice) * 100
+        val percentageDifference = (kotlin.math.abs(priceDifference) / latestPrice) * 100
         return percentageDifference > percentage
     }
 

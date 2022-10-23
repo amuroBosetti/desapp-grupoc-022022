@@ -1,5 +1,5 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice;
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFoundTokenException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,8 +16,8 @@ class QuotationsController {
     lateinit var quotationsService: QuotationsService
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(CouldNotFoundTokenException::class)
-    fun handleException(exception: CouldNotFoundTokenException) : ResponseEntity<String>{
+    @ExceptionHandler(CouldNotFindTokenException::class)
+    fun handleException(exception: CouldNotFindTokenException) : ResponseEntity<String>{
         return ResponseEntity(exception.message, HttpStatus.BAD_REQUEST)
     }
 

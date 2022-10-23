@@ -1,6 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFoundTokenException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -52,7 +52,7 @@ class QuotationsControllerTest {
         tickerPrice.symbol = mockSymbol
 
         every { client.getPrice(mockSymbol) } returns  tickerPrice
-        every { client.getPrice("ZZZZ") } throws CouldNotFoundTokenException()
+        every { client.getPrice("ZZZZ") } throws CouldNotFindTokenException()
         every { client.getAllPrices() } returns tickers.map {
             val t = TickerPrice()
             t.price = "2.05"
@@ -96,7 +96,7 @@ class QuotationsControllerTest {
         ).andExpect(MockMvcResultMatchers.status().isBadRequest)
             .andReturn().response.contentAsString
 
-        assertThat(response).isEqualTo(CouldNotFoundTokenException().message)
+        assertThat(response).isEqualTo(CouldNotFindTokenException().message)
     }
 
 
