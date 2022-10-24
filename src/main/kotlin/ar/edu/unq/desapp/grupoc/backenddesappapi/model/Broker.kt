@@ -14,10 +14,7 @@ class Broker(
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
     fun expressOperationIntent(
-        user: BrokerUser,
-        operationType: OperationType,
-        intendedPrice: Double,
-        cryptoSymbol: String
+        user: BrokerUser, operationType: OperationType, intendedPrice: Double, cryptoSymbol: String
     ): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol)
@@ -33,28 +30,43 @@ class Broker(
     }
 
     fun processTransaction(
-        transactionId: UUID,
-        acceptingUser: BrokerUser,
-        operationType: OperationType,
-        latestQuotation: Double
-    ) {
+        transaction: Transaction,
+        user: BrokerUser,
+        latestQuotation: Double,
+        action: TransactionAction
+    ): Transaction {
+        return action.processWith(transaction, user, latestQuotation, this)
+    }
+
+    internal fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
         val transaction = findTransactionById(transactionId)
+        transaction.confirmCryptoTransferReception()
+        scoreTracker.trackTransferReception(transaction, Instant.now())
+        return transaction
+    }
+
+    internal fun confirmTransferReception(transactionId: UUID): Transaction {
+        val transaction = findTransactionById(transactionId)
+        transaction.confirmTransferReception()
+        return transaction
+    }
+
+    internal fun validatePriceBand(transaction: Transaction, latestQuotation: Double) {
         if (priceDifferenceIsHigherThan(percentage, transaction.intendedPrice, latestQuotation)) {
             transaction.cancel()
             throw RuntimeException("Cannot process transaction, latest quotation is outside price band")
-        } else {
-            transaction.accept(acceptingUser, operationType, latestQuotation)
         }
     }
 
-    fun informTransfer(transactionId: UUID) {
-        findTransactionById(transactionId).informTransfer()
+    internal fun informCryptoTransfer(transactionId: UUID): Transaction {
+        return findTransactionById(transactionId).informCryptoTransfer()
     }
 
-    fun confirmReception(transactionId: UUID, now: Instant) {
-        val transaction = findTransactionById(transactionId)
-        transaction.confirmReception()
-        scoreTracker.trackTransferReception(transaction, now)
+    internal fun informTransfer(transaction: Transaction, user: BrokerUser): Transaction {
+        if (transaction.operationType == OperationType.SELL){
+            transaction.secondUser = user
+        }
+        return transaction.informTransfer()
     }
 
     fun cancelTransaction(transactionId: UUID, cancellingUser: BrokerUser) {
@@ -78,8 +90,7 @@ class Broker(
         return percentageDifference > percentage
     }
 
-    private fun findTransactionById(transactionId: UUID) =
-        transactionRepository.findById(transactionId).get()
+    private fun findTransactionById(transactionId: UUID) = transactionRepository.findById(transactionId).get()
 
     fun activeTransactions(): List<Transaction> {
         return transactionRepository.findAllByStatus(TransactionStatus.ACTIVE)
