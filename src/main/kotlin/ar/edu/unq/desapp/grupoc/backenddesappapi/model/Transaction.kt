@@ -10,7 +10,9 @@ class Transaction(
     val firstUser: BrokerUser,
     val operationType: OperationType,
     val intendedPrice: Double,
-    val symbol: String
+    val symbol: String,
+    var walletId: String? = null,
+    var cvu: String? = null
 ) {
 
     val createadAt: Instant = Instant.now() //TODO esto deberia crearlo la base de datos

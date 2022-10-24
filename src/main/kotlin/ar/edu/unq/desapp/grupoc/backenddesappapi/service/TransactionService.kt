@@ -38,8 +38,13 @@ class TransactionService {
             TransactionCreationResponseDTO {
         val user = findUser(userEmail)
         val savedTransaction = broker.expressOperationIntent(
-                user, transactionCreationDTO.operationType, transactionCreationDTO.intendedPrice, transactionCreationDTO.symbol
-            )
+            user,
+            transactionCreationDTO.operationType,
+            transactionCreationDTO.intendedPrice,
+            transactionCreationDTO.symbol,
+            transactionCreationDTO.walletId,
+            transactionCreationDTO.cvu
+        )
         return TransactionCreationResponseDTO.from(savedTransaction)
     }
 

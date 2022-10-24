@@ -3,11 +3,6 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
-import com.binance.api.client.BinanceApiRestClient
-import com.binance.api.client.domain.market.TickerPrice
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -15,12 +10,19 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
-import java.util.HashMap
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import com.binance.api.client.BinanceApiRestClient
+import com.binance.api.client.domain.market.TickerPrice
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
+import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 
 @SpringBootTest
 @Transactional
@@ -64,20 +66,84 @@ class BrokerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(OperationType::class)
-    fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType) {
-        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
+    @MethodSource("operationTypesAndInputs")
+    fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType, walletId : String?, cvu : String?) {
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol, walletId, cvu)
 
         assertThat(broker.findTransactionsOf(user).first().firstUser).usingRecursiveComparison().isEqualTo(user)
     }
 
     @ParameterizedTest
-    @EnumSource(OperationType::class)
-    fun `when two users express an intent, then they only have one active transaction each`(operationType: OperationType) {
-        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
-        broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol)
+    @MethodSource("operationTypesAndInputs")
+    fun `when two users express an intent, then they only have one active transaction each`(operationType: OperationType, walletId: String?, cvu: String?) {
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol, walletId, cvu)
+        broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol, walletId, cvu)
 
         assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).usingRecursiveComparison().isEqualTo(anotherUser)
+    }
+
+    @Test
+    fun `when a user expresses a buy intent, then the wallet id is saved`() {
+        val walletId = "12345678"
+        broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol, walletId = walletId)
+
+        assertThat(broker.findTransactionsOf(user).first().walletId).isEqualTo(walletId)
+    }
+
+    @Test
+    fun `when a user expresses a buy intent with a cvu, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.BUY,
+            aPrice,
+            cryptoSymbol,
+            walletId = TransactionFixture.A_WALLET_ID,
+            cvu = TransactionFixture.A_CVU
+        ) }.isInstanceOf(RuntimeException::class.java)
+            .hasMessage("Cannot create a BUY transaction with cvu")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a buy intent without a wallet id, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol, walletId = null) }
+            .isInstanceOf(RuntimeException::class.java)
+            .hasMessage("Cannot create a BUY transaction with walletId null")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a sell intent, then the cvu is saved`() {
+        val cvu = "6666666666666666666666"
+        broker.expressOperationIntent(user, OperationType.SELL, aPrice, cryptoSymbol, cvu = cvu)
+
+        assertThat(broker.findTransactionsOf(user).first().cvu).isEqualTo(cvu)
+    }
+
+    @Test
+    fun `when a user expresses a sell intent with a walletId, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.SELL,
+            aPrice,
+            cryptoSymbol,
+            walletId = TransactionFixture.A_WALLET_ID,
+            cvu = TransactionFixture.A_CVU
+        ) }.isInstanceOf(RuntimeException::class.java)
+            .hasMessage("Cannot create a SELL transaction with walletId")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a sell intent without a cvu, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.SELL, aPrice, cryptoSymbol, cvu = null) }
+            .isInstanceOf(RuntimeException::class.java)
+            .hasMessage("Cannot create a SELL transaction with cvu null")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
     }
 
     @Test
@@ -103,7 +169,7 @@ class BrokerTest {
 
         @BeforeEach
         fun setUp() {
-            transaction = broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
+            transaction = broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol, "12345678")
         }
 
         @Test
@@ -244,6 +310,16 @@ class BrokerTest {
 
     private fun valueHigherThanPercentage(percentage: Double, originalValue: Double) =
         originalValue * (percentage / 100) + 0.01
+
+    companion object {
+        @JvmStatic
+        fun operationTypesAndInputs(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(OperationType.BUY, "12345678", null),
+                Arguments.of(OperationType.SELL, null, "4444444444444444444444")
+            )
+        }
+    }
 
 
 }
