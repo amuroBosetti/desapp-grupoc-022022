@@ -185,7 +185,7 @@ class TransactionServiceTest {
 
     @Test
     @Transactional
-    fun `when an active transaction is processed, then it is returned with its new status`() {
+    fun `when an active transaction is processed, then it is returned with its new status and second user is saved`() {
         val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
 
         val processedTransaction = transactionService.processTransaction(

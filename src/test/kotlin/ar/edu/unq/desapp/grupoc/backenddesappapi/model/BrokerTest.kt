@@ -1,9 +1,15 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
+import com.binance.api.client.BinanceApiRestClient
+import com.binance.api.client.domain.market.TickerPrice
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -17,14 +23,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
-import com.binance.api.client.BinanceApiRestClient
-import com.binance.api.client.domain.market.TickerPrice
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
-import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
 @SpringBootTest
@@ -213,8 +211,8 @@ class BrokerTest {
         @Test
         fun `when the same user tries to accept the transaction, then it fails and the transaction is not processed`() {
             assertThatThrownBy { broker.processTransaction(transaction, user, aPrice, TransactionAction.ACCEPT) }
-                .isInstanceOf(TransactionWithSameUserInBothSidesException::class.java)
-                .hasMessage("Cannot process transaction with id ${transaction.id!!} because both sides are the same user")
+                .isInstanceOf(UnauthorizedUserForAction::class.java)
+                .hasMessage("User ${user.email} is not authorized to perform action ACCEPT on transaction ${transaction.id}")
 
             val transaction = broker.findTransactionsOf(user).first()
             assertThat(transaction.secondUser).isNull()
@@ -344,6 +342,56 @@ class BrokerTest {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
             broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION)
         }
+    }
+
+    @Nested
+    @DisplayName("given a user who has expressed their selling intent")
+    inner class SellOperationTypeAlreadyExpressed {
+        private lateinit var transaction: Transaction
+
+        @BeforeEach
+        fun setUp() {
+            transaction = broker.expressOperationIntent(
+                user,
+                OperationType.SELL,
+                aPrice,
+                cryptoSymbol,
+                cvu = TransactionFixture.A_CVU,
+                quantity = 10
+            )
+        }
+
+        @Test
+        fun `when another user informs transfer has been completed, then the transaction is waiting confirmation`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
+        }
+
+        @Test
+        fun `when another user informs transfer, then the receiving user can confirm the reception`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.PENDING_CRYPTO_TRANSFER)
+        }
+
+        @Test
+        fun `when the transfer reception has been confirmed, then the seller can inform the crypto transfer`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
+        }
+
+
+
     }
 
     private fun valueHigherThanPercentage(percentage: Double, originalValue: Double) =

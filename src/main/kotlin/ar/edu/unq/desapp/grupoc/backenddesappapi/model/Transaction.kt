@@ -28,8 +28,8 @@ class Transaction(
 
     fun accept(secondUser: BrokerUser, latestQuotation: Double) : Transaction {
         status = status.accept()
-        this.secondUser = secondUser
-        this.quotation = latestQuotation
+        if (this.secondUser == null) this.secondUser = secondUser
+        if (this.quotation == null) this.quotation = latestQuotation
         return this
     }
 

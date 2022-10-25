@@ -57,7 +57,8 @@ class Broker(
     fun processTransaction(
         transaction: Transaction, user: BrokerUser, latestQuotation: Double, action: TransactionAction
     ): Transaction {
-        return action.processWith(transaction, user, latestQuotation, this)
+        val processedTransaction = action.processWith(transaction, user, latestQuotation, this)
+        return transactionRepository.save(processedTransaction)
     }
 
     internal fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
