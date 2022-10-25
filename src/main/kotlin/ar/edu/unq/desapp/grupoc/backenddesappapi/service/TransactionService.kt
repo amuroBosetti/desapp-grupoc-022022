@@ -26,9 +26,12 @@ class TransactionService {
     @Autowired
     private lateinit var transactionRepository: TransactionRepository
 
+    @Autowired
+    lateinit var quotationsService: QuotationsService
+
     @PostConstruct
     fun init() {
-        broker = Broker(hashMapOf(Pair("BNBUSDT", 15.0)), 5.0, transactionRepository)
+        broker = Broker(5.0, transactionRepository, quotationsService)
     }
 
     fun createTransaction(userEmail: String, transactionCreationDTO: TransactionCreationDTO):
@@ -57,7 +60,7 @@ class TransactionService {
         val transaction = transactionRepository.findById(transactionId).orElseThrow {
             TransactionNotFoundException(transactionId)
         }
-        val latestQuotation = 15.0 //TODO agregar quotationservice cuando este
+        val latestQuotation = quotationsService.getTokenPrice(transaction.symbol).price.toDouble()
         return broker.processTransaction(transaction, user, latestQuotation, action)
     }
 

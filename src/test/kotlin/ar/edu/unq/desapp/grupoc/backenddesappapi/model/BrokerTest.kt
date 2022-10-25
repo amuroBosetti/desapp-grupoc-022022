@@ -3,6 +3,11 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import com.binance.api.client.BinanceApiRestClient
+import com.binance.api.client.domain.market.TickerPrice
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -27,6 +32,12 @@ class BrokerTest {
     @Autowired
     private lateinit var userRepository: UserRepository
 
+    @Autowired
+    lateinit var quotationsService: QuotationsService
+
+    @MockkBean
+    lateinit var client: BinanceApiRestClient
+
     private val user = UserFixture.aUser()
     private val anotherUser = UserFixture.aUser("pepito@gmail.com", "9506568711100060517136", "12345679")
     private lateinit var broker: Broker
@@ -34,14 +45,22 @@ class BrokerTest {
     private val higherIntendedPrice = 1.05
     private val lowerIntendedPrice = 0.95
     private val cryptoSymbol = "ALICEUSDT"
-    private val quotations = HashMap<String, Double>()
     private val percentage : Double = 5.00
+    val mockPrice = aPrice
+    val mockSymbol = "ALICEUSDT"
+
 
     @BeforeEach
     internal fun setUp() {
         userRepository.saveAll(listOf(user, anotherUser))
-        quotations.put("ALICEUSDT",aPrice)
-        broker = Broker(quotations, percentage, transactionRepository)
+        broker = Broker(percentage, transactionRepository, quotationsService)
+
+        val tickerPrice = TickerPrice()
+        tickerPrice.price = mockPrice.toString()
+        tickerPrice.symbol = mockSymbol
+
+        every { client.getPrice(mockSymbol) } returns  tickerPrice
+        every { client.getPrice("") } throws RuntimeException("Could not get the token price")
     }
 
     @ParameterizedTest
