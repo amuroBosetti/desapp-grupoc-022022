@@ -1,6 +1,5 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
 
 enum class TransactionAction {
@@ -16,11 +15,8 @@ enum class TransactionAction {
             return transaction.accept(user, latestQuotation)
         }
 
-        private fun validateUsers(transaction: Transaction, user: BrokerUser) {
-            if (transaction.firstUser == user) {
-                throw TransactionWithSameUserInBothSidesException(transaction.id!!)
-            }
-        }
+        override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
+            transaction.firstUser == user
 
     },
     INFORM_TRANSFER {
@@ -34,11 +30,8 @@ enum class TransactionAction {
             return broker.informTransfer(transaction, user)
         }
 
-        private fun validateUsers(transaction: Transaction, user: BrokerUser) {
-            if (transaction.operationType == OperationType.BUY && transaction.firstUser != user) {
-                throw UnauthorizedUserForAction(user.email, this, transaction.id!!)
-            }
-        }
+        override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
+            transaction.operationType == OperationType.BUY && transaction.firstUser != user
     },
     CONFIRM_TRANSFER_RECEPTION {
         override fun processWith(
@@ -51,12 +44,9 @@ enum class TransactionAction {
             return broker.confirmTransferReception(transaction.id!!)
         }
 
-        private fun validateUsers(transaction: Transaction, user: BrokerUser) {
-            if (transaction.operationType == OperationType.BUY && transaction.secondUser != user
-                || transaction.operationType == OperationType.SELL && transaction.firstUser != user){
-                throw UnauthorizedUserForAction(user.email, this, transaction.id!!)
-            }
-        }
+        override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
+            transaction.operationType == OperationType.BUY && transaction.secondUser != user
+                    || transaction.operationType == OperationType.SELL && transaction.firstUser != user
     },
     INFORM_CRYPTO_TRANSFER {
         override fun processWith(
@@ -69,12 +59,9 @@ enum class TransactionAction {
             return broker.informCryptoTransfer(transaction.id!!)
         }
 
-        private fun validateUsers(transaction: Transaction, user: BrokerUser) {
-            if (transaction.operationType == OperationType.SELL && transaction.firstUser != user
-                || transaction.operationType == OperationType.BUY && transaction.secondUser != user){
-                throw UnauthorizedUserForAction(user.email, this, transaction.id!!)
-            }
-        }
+        override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
+            transaction.operationType == OperationType.SELL && transaction.firstUser != user
+                 || transaction.operationType == OperationType.BUY && transaction.secondUser != user
     },
     CONFIRM_CRYPTO_TRANSFER_RECEPTION {
         override fun processWith(
@@ -87,12 +74,9 @@ enum class TransactionAction {
             return broker.confirmCryptoTransferReception(transaction.id!!)
         }
 
-        private fun validateUsers(transaction: Transaction, user: BrokerUser) {
-            if (transaction.operationType == OperationType.BUY && transaction.firstUser != user
-                || transaction.operationType == OperationType.SELL && transaction.secondUser != user){
-                throw UnauthorizedUserForAction(user.email, this, transaction.id!!)
-            }
-        }
+        override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
+            transaction.operationType == OperationType.BUY && transaction.firstUser != user
+                    || transaction.operationType == OperationType.SELL && transaction.secondUser != user
     };
 
     abstract fun processWith(
@@ -101,5 +85,16 @@ enum class TransactionAction {
         latestQuotation: Double,
         broker: Broker
     ): Transaction
+
+    protected fun validateUsers(transaction: Transaction, user: BrokerUser) {
+        if (usersAreNotValidForAction(transaction, user)) {
+            throw UnauthorizedUserForAction(user.email, this, transaction.id!!)
+        }
+    }
+
+    abstract fun usersAreNotValidForAction(
+        transaction: Transaction,
+        user: BrokerUser
+    ) : Boolean
 
 }

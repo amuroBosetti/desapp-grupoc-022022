@@ -53,7 +53,7 @@ class ScoreTrackerTest {
     }
 
     private fun getTransaction(): Transaction {
-        val transaction = Transaction(aUserWithLowReputation, OperationType.BUY, 1.01, "BNBUSDT")
+        val transaction = Transaction(aUserWithLowReputation, OperationType.BUY, 1.01, "BNBUSDT", quantity = 0)
         transaction.accept(aUserWithHighReputation, 1.01)
         return transaction
     }

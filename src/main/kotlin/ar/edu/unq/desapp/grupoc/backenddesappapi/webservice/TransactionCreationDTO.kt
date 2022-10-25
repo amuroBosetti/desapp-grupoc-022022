@@ -10,5 +10,9 @@ data class TransactionCreationDTO(
     @field: NotNull
     val intendedPrice: Double,
     @field: NotNull
-    val operationType: OperationType
+    val operationType: OperationType,
+    @field: NotNull
+    val quantity: Int,
+    val walletId: String? = null,
+    val cvu: String? = null
 )

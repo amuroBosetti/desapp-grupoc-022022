@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
@@ -9,6 +10,8 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.UserFixture
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
+import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture.Companion.A_WALLET_ID
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
@@ -17,6 +20,8 @@ import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -59,48 +64,94 @@ class TransactionServiceTest {
         every { client.getPrice("") } throws RuntimeException("Could not get the token price")
     }
 
-    @Test
-    @Transactional
-    fun `when a transaction without a user is received, then it fails`() {
-        val validCreationPayload = validCreationPayload(OperationType.BUY)
+    @Nested
+    @DisplayName("when a transaction is created")
+    open inner class TransactionCreationTest {
 
-        assertThatThrownBy { transactionService.createTransaction("", validCreationPayload) }.isInstanceOf(
-            RuntimeException::class.java
-        ).hasMessage("User email cannot be blank")
-    }
+        @Test
+        @Transactional
+        open fun `without a user is received, then it fails`() {
+            val validCreationPayload = validCreationPayload(OperationType.BUY)
 
-    @Test
-    @Transactional
-    fun `when a transaction is received but user does not exist, then it fails`() {
-        val notRegisteredUserEmail = "notRegisteredUser@gmail.com"
-        val validCreationPayload = validCreationPayload(OperationType.BUY)
+            assertThatThrownBy { transactionService.createTransaction("", validCreationPayload) }.isInstanceOf(
+                RuntimeException::class.java
+            ).hasMessage("User email cannot be blank")
+        }
 
-        assertThatThrownBy {
-            transactionService.createTransaction(
-                notRegisteredUserEmail,
-                validCreationPayload
-            )
-        }.isInstanceOf(NotRegisteredUserException::class.java)
-            .hasMessage("User with email $notRegisteredUserEmail is not registered")
-    }
+        @Test
+        @Transactional
+        open fun `but user does not exist, then it fails`() {
+            val notRegisteredUserEmail = "notRegisteredUser@gmail.com"
+            val validCreationPayload = validCreationPayload(OperationType.BUY)
 
-    @Test
-    @Transactional
-    fun `when a transaction is created, then it is returned`() {
-        val validCreationPayload = validCreationPayload(OperationType.BUY)
+            assertThatThrownBy {
+                transactionService.createTransaction(
+                    notRegisteredUserEmail,
+                    validCreationPayload
+                )
+            }.isInstanceOf(NotRegisteredUserException::class.java)
+                .hasMessage("User with email $notRegisteredUserEmail is not registered")
+        }
 
-        val response = transactionService.createTransaction(VALID_USER, validCreationPayload)
+        @Test
+        @Transactional
+        open fun `successfully, then it is returned`() {
+            val validCreationPayload = validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID)
 
-        assertThat(response.operationId).isNotNull
-        assertThat(response.symbol).isEqualTo(SYMBOL)
-        assertThat(response.intendedPrice).isEqualTo(validCreationPayload.intendedPrice)
-        assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
+            val response = transactionService.createTransaction(VALID_USER, validCreationPayload)
+
+            assertThat(response.operationId).isNotNull
+            assertThat(response.symbol).isEqualTo(SYMBOL)
+            assertThat(response.intendedPrice).isEqualTo(validCreationPayload.intendedPrice)
+            assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
+        }
+
+        @Test
+        @Transactional
+        open fun `of type buy, then the wallet id is included`() {
+            val validCreationPayload = validCreationPayload(OperationType.BUY, walletId = "12345678")
+
+            val response = transactionService.createTransaction(VALID_USER, validCreationPayload)
+
+            assertThat(response.operationId).isNotNull
+            assertThat(response.symbol).isEqualTo(SYMBOL)
+            assertThat(response.intendedPrice).isEqualTo(validCreationPayload.intendedPrice)
+            assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
+            assertThat(response.walletId).isEqualTo(validCreationPayload.walletId)
+        }
+
+        @Test
+        @Transactional
+        open fun `of type sell, then the cvu is included`() {
+            val validCreationPayload = validCreationPayload(OperationType.SELL, cvu = TransactionFixture.A_CVU)
+
+            val response = transactionService.createTransaction(VALID_USER, validCreationPayload)
+
+            assertThat(response.operationId).isNotNull
+            assertThat(response.symbol).isEqualTo(SYMBOL)
+            assertThat(response.intendedPrice).isEqualTo(validCreationPayload.intendedPrice)
+            assertThat(response.operationType).isEqualTo(validCreationPayload.operationType)
+            assertThat(response.cvu).isEqualTo(validCreationPayload.cvu)
+        }
+
+        @Test
+        @Transactional
+        open fun `with missing input, then it fails and is not created`() {
+            val validCreationPayload = validCreationPayload(OperationType.SELL)
+
+            assertThatThrownBy { transactionService.createTransaction(VALID_USER, validCreationPayload) }
+                .isInstanceOf(UnexpectedUserInformationException::class.java)
+                .hasMessage("Cannot create a SELL transaction with cvu null")
+
+            assertThat(transactionRepository.findAll()).isEmpty()
+        }
+
     }
 
     @Test
     @Transactional
     fun `when all active transactions are requested, then they are returned`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
 
         assertThat(transactionService.getActiveTransactions()).singleElement().extracting("id")
             .isEqualTo(transaction.operationId)
@@ -121,7 +172,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a transaction is processed but the user does not exists, then it fails`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, A_WALLET_ID))
         val nonExistingUser = "nonExistingUser@gmail.com"
 
         assertThatThrownBy {
@@ -134,8 +185,8 @@ class TransactionServiceTest {
 
     @Test
     @Transactional
-    fun `when an active transaction is processed, then it is returned with its new status`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+    fun `when an active transaction is processed, then it is returned with its new status and second user is saved`() {
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
 
         val processedTransaction = transactionService.processTransaction(
             transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT
@@ -148,7 +199,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when an active transaction is processed but the action is not valid for status, then it fails and the transaction is not processed`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
 
         assertThatThrownBy {
             transactionService.processTransaction(
@@ -163,7 +214,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a transaction is processed by a user who is not part of it, then it fails and the transaction is not processed`() {
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
         val thirdUser =
             userRepository.save(UserFixture.aUser("thirduser@gmail.com", "8506368711100060514136", "82349678"))
@@ -182,7 +233,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a pending transaction is processed by a user who does not have to inform a transfer, then it fails and the transaction is not processed`(){
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
 
         assertThatThrownBy {
@@ -201,7 +252,9 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a waiting confirmation transaction is processed by a user who does not have to confirm a transfer reception, then it fails and the transaction is not processed`(){
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.SELL))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(
+            OperationType.SELL, cvu = TransactionFixture.A_CVU
+        ))
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.INFORM_TRANSFER)
 
         assertThatThrownBy {
@@ -220,7 +273,7 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a pending crypto transfer transaction is processed by a user who does not have to inform crypto transfer, then it fails and the transaction is not processed`(){
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.BUY, walletId = A_WALLET_ID))
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
         transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.INFORM_TRANSFER)
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
@@ -241,7 +294,9 @@ class TransactionServiceTest {
     @Test
     @Transactional
     fun `when a waiting crypto transfer confirmation transaction is processed by a user who does not have to confirm crypto transfer reception, then it fails and the transaction is not processed`(){
-        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(OperationType.SELL))
+        val transaction = transactionService.createTransaction(VALID_USER, validCreationPayload(
+            OperationType.SELL, cvu = TransactionFixture.A_CVU
+        ))
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.INFORM_TRANSFER)
         transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
         transactionService.processTransaction(transaction.operationId, VALID_USER, TransactionAction.INFORM_CRYPTO_TRANSFER)
@@ -259,9 +314,13 @@ class TransactionServiceTest {
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
     }
 
-    private fun validCreationPayload(operationType: OperationType): TransactionCreationDTO {
-        val intendedPrice = 15.0
-        return TransactionCreationDTO(SYMBOL, intendedPrice, operationType)
-    }
+    private fun validCreationPayload(operationType: OperationType, walletId: String? = null, cvu: String? = null) = TransactionCreationDTO(
+        SYMBOL,
+        15.0,
+        operationType,
+        0,
+        walletId,
+        cvu
+    )
 
 }

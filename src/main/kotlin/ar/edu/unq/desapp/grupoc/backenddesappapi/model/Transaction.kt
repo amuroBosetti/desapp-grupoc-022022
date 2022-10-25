@@ -10,7 +10,10 @@ class Transaction(
     val firstUser: BrokerUser,
     val operationType: OperationType,
     val intendedPrice: Double,
-    val symbol: String
+    val symbol: String,
+    val quantity: Int,
+    var walletId: String? = null,
+    var cvu: String? = null
 ) {
 
     val createadAt: Instant = Instant.now() //TODO esto deberia crearlo la base de datos
@@ -25,8 +28,8 @@ class Transaction(
 
     fun accept(secondUser: BrokerUser, latestQuotation: Double) : Transaction {
         status = status.accept()
-        this.secondUser = secondUser
-        this.quotation = latestQuotation
+        if (this.secondUser == null) this.secondUser = secondUser
+        if (this.quotation == null) this.quotation = latestQuotation
         return this
     }
 

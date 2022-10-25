@@ -3,6 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
@@ -51,7 +52,7 @@ class TransactionControllerTest {
             .throws(NotRegisteredUserException("User with email $NON_EXISTING_USER does not exist"))
 
         every { transactionService.createTransaction(EXISTING_USER, any()) }
-            .returns(TransactionCreationResponseDTO(CREATED_OPERATION_ID, "", 0.0, OperationType.BUY))
+            .returns(TransactionCreationResponseDTO(CREATED_OPERATION_ID, "BNBUSDT", 0.0, OperationType.BUY, 4))
     }
 
     @Test
@@ -60,7 +61,7 @@ class TransactionControllerTest {
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("user", NON_EXISTING_USER)
-                .content(validPayload())
+                .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         ).andExpect(status().isUnauthorized)
     }
 
@@ -69,7 +70,7 @@ class TransactionControllerTest {
         mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validPayload())
+                .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         ).andExpect(status().isBadRequest)
     }
 
@@ -98,16 +99,102 @@ class TransactionControllerTest {
 
     @Test
     fun `when a registered user creates a transaction, then it is returned`() {
+        val payload = validPayload()
         val response = mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("user", EXISTING_USER)
-                .content(validPayload())
+                .content(jacksonObjectMapper().writeValueAsString(payload))
         ).andExpect(status().isCreated)
             .andReturn().response.contentAsString
 
         val responseDTO = jacksonObjectMapper().readValue(response, TransactionCreationResponseDTO::class.java)
         assertThat(responseDTO.operationId).isEqualTo(CREATED_OPERATION_ID)
+        assertThat(responseDTO.symbol).isEqualTo(payload.symbol)
+        assertThat(responseDTO.intendedPrice).isEqualTo(payload.intendedPrice)
+        assertThat(responseDTO.quantity).isEqualTo(payload.quantity)
+    }
+
+    @Test
+    fun `when a registered user creates a buy transaction, then the crypto wallet id is included`() {
+        val walletId = "12345678"
+        every { transactionService.createTransaction(EXISTING_USER, any()) }
+            .returns(
+                TransactionCreationResponseDTO(
+                    CREATED_OPERATION_ID,
+                    "",
+                    0.0,
+                    OperationType.BUY,
+                    0,
+                    walletId = walletId,
+                )
+            )
+        val payload = jacksonObjectMapper().writeValueAsString(
+            TransactionCreationDTO(
+                "BNBUSDT",
+                0.0,
+                OperationType.BUY,
+                0,
+                walletId = walletId,
+            )
+        )
+
+        val response = mockMvc.perform(
+            post("/transaction")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("user", EXISTING_USER)
+                .content(payload)
+        ).andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        val responseDTO = jacksonObjectMapper().readValue(response, TransactionCreationResponseDTO::class.java)
+        assertThat(responseDTO.walletId).isEqualTo(walletId)
+    }
+
+    @Test
+    fun `when a registered user creates a sell transaction, then the cvu is included`() {
+        val cvu = "4444444444444444444444"
+        every { transactionService.createTransaction(EXISTING_USER, any()) }
+            .returns(TransactionCreationResponseDTO(CREATED_OPERATION_ID, "", 0.0, OperationType.BUY, 0, cvu = cvu))
+        val payload = jacksonObjectMapper().writeValueAsString(
+            TransactionCreationDTO(
+                "BNBUSDT",
+                0.0,
+                OperationType.BUY,
+                0,
+                cvu = cvu
+            )
+        )
+
+        val response = mockMvc.perform(
+            post("/transaction")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("user", EXISTING_USER)
+                .content(payload)
+        ).andExpect(status().isCreated)
+            .andReturn().response.contentAsString
+
+        val responseDTO = jacksonObjectMapper().readValue(response, TransactionCreationResponseDTO::class.java)
+        assertThat(responseDTO.cvu).isEqualTo(cvu)
+    }
+
+    @Test
+    fun `when a transaction is created with missing input, then it fails`() {
+        val exceptionMessage = "A message"
+        every { transactionService.createTransaction(any(), any()) }.throws(
+            (UnexpectedUserInformationException(exceptionMessage))
+        )
+
+        val returnValue = mockMvc.perform(
+            post("/transaction")
+                .header("user", EXISTING_USER)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(validPayload()))
+        )
+            .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        assertThat(returnValue).isEqualTo(exceptionMessage)
     }
 
     @Test
@@ -171,7 +258,11 @@ class TransactionControllerTest {
 
     @Test
     fun `when an inexisting transaction is processed, then it fails`() {
-        every { transactionService.processTransaction(any(), any(), any()) }.throws(TransactionNotFoundException(CREATED_OPERATION_ID))
+        every { transactionService.processTransaction(any(), any(), any()) }.throws(
+            TransactionNotFoundException(
+                CREATED_OPERATION_ID
+            )
+        )
 
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
@@ -217,15 +308,22 @@ class TransactionControllerTest {
     }
 
     private fun validPayload() =
-        jacksonObjectMapper().writeValueAsString(TransactionCreationDTO("BNBUSDT", 0.0, OperationType.SELL))
+        TransactionCreationDTO(
+            "BNBUSDT",
+            0.0,
+            OperationType.SELL,
+            4,
+            "12345678"
+        )
 
     companion object {
         @JvmStatic
         fun invalidBodies(): Stream<String> {
             return Stream.of(
-                """ { "symbol": "", "intendedPrice": 0.0, "operationType": "BUY" } """,
-                """ { "symbol": "ALICEUSDT", "intendedPrice": , "operationType": "BUY" } """,
-                """ { "symbol": "ALICEUSDT", "intendedPrice": 0.0, "operationType": "WEA" } """,
+                """ { "symbol": "", "intendedPrice": 0.0, "operationType": "BUY", "quantity": 4 } """,
+                """ { "symbol": "ALICEUSDT", "intendedPrice": , "operationType": "BUY", "quantity": 4} """,
+                """ { "symbol": "ALICEUSDT", "intendedPrice": 0.0, "operationType": "WEA", "quantity": 4 } """,
+                """ { "symbol": "ALICEUSDT", "intendedPrice": 0.0, "operationType": "WEA", "quantity": } """,
             )
         }
     }

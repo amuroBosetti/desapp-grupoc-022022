@@ -134,5 +134,5 @@ class TransactionTest {
         return transaction
     }
 
-    private fun getActiveTransaction() = Transaction(user, operationType, intendedPrice, "BNBUSDT")
+    private fun getActiveTransaction() = Transaction(user, operationType, intendedPrice, "BNBUSDT", quantity = 0)
 }

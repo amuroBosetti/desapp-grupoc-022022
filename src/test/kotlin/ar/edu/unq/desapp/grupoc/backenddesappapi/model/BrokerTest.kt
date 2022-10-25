@@ -1,9 +1,11 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
 import com.ninjasquad.springmockk.MockkBean
@@ -15,12 +17,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
-import java.util.HashMap
+import java.util.stream.Stream
 
 @SpringBootTest
 @Transactional
@@ -64,26 +67,112 @@ class BrokerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(OperationType::class)
-    fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType) {
-        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
+    @MethodSource("operationTypesAndInputs")
+    fun `when a user expresses their intent, then their intent is added to their active transactions`(operationType : OperationType, walletId : String?, cvu : String?) {
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol, walletId, cvu, 0)
 
         assertThat(broker.findTransactionsOf(user).first().firstUser).usingRecursiveComparison().isEqualTo(user)
     }
 
     @ParameterizedTest
-    @EnumSource(OperationType::class)
-    fun `when two users express an intent, then they only have one active transaction each`(operationType: OperationType) {
-        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol)
-        broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol)
+    @MethodSource("operationTypesAndInputs")
+    fun `when two users express an intent, then they only have one active transaction each`(operationType: OperationType, walletId: String?, cvu: String?) {
+        broker.expressOperationIntent(user, operationType, aPrice, cryptoSymbol, walletId, cvu, 0)
+        broker.expressOperationIntent(anotherUser, operationType, aPrice, cryptoSymbol, walletId, cvu, 0)
 
         assertThat(broker.findTransactionsOf(anotherUser).first().firstUser).usingRecursiveComparison().isEqualTo(anotherUser)
     }
 
     @Test
+    fun `when a user expresses a buy intent, then the wallet id is saved`() {
+        val walletId = "12345678"
+        broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol, walletId = walletId, quantity = 0)
+
+        assertThat(broker.findTransactionsOf(user).first().walletId).isEqualTo(walletId)
+    }
+
+    @Test
+    fun `when a user expresses a buy intent with a cvu, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.BUY,
+            aPrice,
+            cryptoSymbol,
+            walletId = TransactionFixture.A_WALLET_ID,
+            cvu = TransactionFixture.A_CVU,
+            0
+        ) }.isInstanceOf(UnexpectedUserInformationException::class.java)
+            .hasMessage("Cannot create a BUY transaction with cvu")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a buy intent without a wallet id, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.BUY,
+            aPrice,
+            cryptoSymbol,
+            walletId = null,
+            quantity = 0
+        ) }
+            .isInstanceOf(UnexpectedUserInformationException::class.java)
+            .hasMessage("Cannot create a BUY transaction with walletId null")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a sell intent, then the cvu is saved`() {
+        val cvu = "6666666666666666666666"
+        broker.expressOperationIntent(user, OperationType.SELL, aPrice, cryptoSymbol, cvu = cvu, quantity = 0)
+
+        assertThat(broker.findTransactionsOf(user).first().cvu).isEqualTo(cvu)
+    }
+
+    @Test
+    fun `when a user expresses a sell intent with a walletId, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.SELL,
+            aPrice,
+            cryptoSymbol,
+            walletId = TransactionFixture.A_WALLET_ID,
+            cvu = TransactionFixture.A_CVU,
+            0
+        ) }.isInstanceOf(UnexpectedUserInformationException::class.java)
+            .hasMessage("Cannot create a SELL transaction with walletId")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
+    fun `when a user expresses a sell intent without a cvu, then it fails and transaction is not created`() {
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.SELL,
+            aPrice,
+            cryptoSymbol,
+            cvu = null,
+            quantity = 0
+        ) }
+            .isInstanceOf(UnexpectedUserInformationException::class.java)
+            .hasMessage("Cannot create a SELL transaction with cvu null")
+
+        assertThat(broker.findTransactionsOf(user)).isEmpty()
+    }
+
+    @Test
     fun `when a user tries to express a buying intent with a price 5% higher than the latest quotation then an exception is thrown`(){
 
-        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, higherIntendedPrice, cryptoSymbol) }
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.BUY,
+            higherIntendedPrice,
+            cryptoSymbol,
+            quantity = 0
+        ) }
                 .isInstanceOf(RuntimeException::class.java)
                 .hasMessage("Cannot express a transaction intent with a price 5 higher than the latest quotation")
     }
@@ -91,7 +180,13 @@ class BrokerTest {
     @Test
     fun `when a user tries to express a buying intent with a price 5% lower than the latest quotation then an exception is thrown`(){
 
-        assertThatThrownBy { broker.expressOperationIntent(user, OperationType.BUY, lowerIntendedPrice, cryptoSymbol) }
+        assertThatThrownBy { broker.expressOperationIntent(
+            user,
+            OperationType.BUY,
+            lowerIntendedPrice,
+            cryptoSymbol,
+            quantity = 0
+        ) }
             .isInstanceOf(RuntimeException::class.java)
             .hasMessage("Cannot express a transaction intent with a price 5 lower than the latest quotation")
     }
@@ -103,14 +198,21 @@ class BrokerTest {
 
         @BeforeEach
         fun setUp() {
-            transaction = broker.expressOperationIntent(user, OperationType.BUY, aPrice, cryptoSymbol)
+            transaction = broker.expressOperationIntent(
+                user,
+                OperationType.BUY,
+                aPrice,
+                cryptoSymbol,
+                "12345678",
+                quantity = 0
+            )
         }
 
         @Test
         fun `when the same user tries to accept the transaction, then it fails and the transaction is not processed`() {
             assertThatThrownBy { broker.processTransaction(transaction, user, aPrice, TransactionAction.ACCEPT) }
-                .isInstanceOf(TransactionWithSameUserInBothSidesException::class.java)
-                .hasMessage("Cannot process transaction with id ${transaction.id!!} because both sides are the same user")
+                .isInstanceOf(UnauthorizedUserForAction::class.java)
+                .hasMessage("User ${user.email} is not authorized to perform action ACCEPT on transaction ${transaction.id}")
 
             val transaction = broker.findTransactionsOf(user).first()
             assertThat(transaction.secondUser).isNull()
@@ -242,8 +344,68 @@ class BrokerTest {
         }
     }
 
+    @Nested
+    @DisplayName("given a user who has expressed their selling intent")
+    inner class SellOperationTypeAlreadyExpressed {
+        private lateinit var transaction: Transaction
+
+        @BeforeEach
+        fun setUp() {
+            transaction = broker.expressOperationIntent(
+                user,
+                OperationType.SELL,
+                aPrice,
+                cryptoSymbol,
+                cvu = TransactionFixture.A_CVU,
+                quantity = 10
+            )
+        }
+
+        @Test
+        fun `when another user informs transfer has been completed, then the transaction is waiting confirmation`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CONFIRMATION)
+        }
+
+        @Test
+        fun `when another user informs transfer, then the receiving user can confirm the reception`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.PENDING_CRYPTO_TRANSFER)
+        }
+
+        @Test
+        fun `when the transfer reception has been confirmed, then the seller can inform the crypto transfer`() {
+            broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.CONFIRM_TRANSFER_RECEPTION)
+
+            broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_CRYPTO_TRANSFER)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
+        }
+
+
+
+    }
+
     private fun valueHigherThanPercentage(percentage: Double, originalValue: Double) =
         originalValue * (percentage / 100) + 0.01
+
+    companion object {
+        @JvmStatic
+        fun operationTypesAndInputs(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(OperationType.BUY, "12345678", null),
+                Arguments.of(OperationType.SELL, null, "4444444444444444444444")
+            )
+        }
+    }
 
 
 }
