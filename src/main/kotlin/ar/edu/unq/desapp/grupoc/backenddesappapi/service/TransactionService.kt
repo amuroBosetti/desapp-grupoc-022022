@@ -43,7 +43,8 @@ class TransactionService {
             transactionCreationDTO.intendedPrice,
             transactionCreationDTO.symbol,
             transactionCreationDTO.walletId,
-            transactionCreationDTO.cvu
+            transactionCreationDTO.cvu,
+            transactionCreationDTO.quantity
         )
         return TransactionCreationResponseDTO.from(savedTransaction)
     }

@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import java.time.Instant
@@ -19,20 +20,29 @@ class Broker(
         intendedPrice: Double,
         cryptoSymbol: String,
         walletId: String? = null,
-        cvu: String? = null
+        cvu: String? = null,
+        quantity: Int
     ): Transaction {
         checkQuotationWithinRange(intendedPrice, cryptoSymbol)
         validateCreationParameters(operationType, walletId, cvu)
-        val transaction = Transaction(user, operationType, intendedPrice, cryptoSymbol, walletId = walletId, cvu = cvu)
+        val transaction = Transaction(
+            user,
+            operationType,
+            intendedPrice,
+            cryptoSymbol,
+            quantity,
+            walletId = walletId,
+            cvu = cvu
+        )
         return transactionRepository.save(transaction)
     }
 
     private fun validateCreationParameters(operationType: OperationType, walletId: String?, cvu: String?) {
         if (operationType == OperationType.BUY && walletId == null || operationType == OperationType.SELL && cvu == null) {
-            throw RuntimeException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "walletId" else "cvu"} null")
+            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "walletId" else "cvu"} null")
         }
         if (operationType == OperationType.BUY && cvu != null || operationType == OperationType.SELL && walletId != null){
-            throw RuntimeException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "cvu" else "walletId"}")
+            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "cvu" else "walletId"}")
         }
     }
 

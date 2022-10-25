@@ -16,7 +16,8 @@ class TransactionFixture {
                 UserFixture.aUser(userEmail, userId = 5L),
                 OperationType.BUY,
                 10.0,
-                "ALICEUSDT"
+                "ALICEUSDT",
+                quantity = 0
             )
             transaction.id = UUID.randomUUID()
             transaction.status = status

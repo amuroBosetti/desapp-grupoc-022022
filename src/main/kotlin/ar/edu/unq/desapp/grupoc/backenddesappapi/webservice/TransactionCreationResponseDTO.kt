@@ -9,6 +9,7 @@ data class TransactionCreationResponseDTO(
     val symbol: String,
     val intendedPrice: Double,
     val operationType: OperationType,
+    val quantity: Int,
     val walletId: String? = null,
     val cvu: String? = null
 ) {
@@ -20,6 +21,7 @@ data class TransactionCreationResponseDTO(
                 transaction.symbol,
                 transaction.intendedPrice,
                 transaction.operationType,
+                transaction.quantity,
                 transaction.walletId,
                 transaction.cvu
             )

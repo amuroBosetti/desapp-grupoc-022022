@@ -11,6 +11,7 @@ class Transaction(
     val operationType: OperationType,
     val intendedPrice: Double,
     val symbol: String,
+    val quantity: Int,
     var walletId: String? = null,
     var cvu: String? = null
 ) {

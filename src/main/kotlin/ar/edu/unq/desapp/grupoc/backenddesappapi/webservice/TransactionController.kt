@@ -3,6 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -53,12 +54,16 @@ class TransactionController {
             ResponseEntity(transactionService.createTransaction(userEmail, transactionCreationDTO), HttpStatus.CREATED)
         } catch (e: NotRegisteredUserException) {
             ResponseEntity(HttpStatus.UNAUTHORIZED)
+        } catch (e: UnexpectedUserInformationException) {
+            throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
         }
     }
 
 
-    @Operation(summary = "Processes a transaction",
-        description = "This endpoint is used to move a transaction from one status to the other, for example when a user has to inform that they have sent money to the other one")
+    @Operation(
+        summary = "Processes a transaction",
+        description = "This endpoint is used to move a transaction from one status to the other, for example when a user has to inform that they have sent money to the other one"
+    )
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     fun processTransaction(
         @RequestHeader("user") userEmail: String,
