@@ -19,13 +19,13 @@ Core:
 * HSQLDB para persistir datos (opcion H2)
 
 FEATURES:
-*	Listar cotizacion de criptoactivos
-*	Permitir que un usuario exprese su intención de compra/venta
-*	Construir un listado donde se muestran las intenciones activas de compra/venta
-*	Procesar la transacción informada por un usuario
+* Listar cotizacion de criptoactivos
+* Permitir que un usuario exprese su intención de compra/venta
+* Construir un listado donde se muestran las intenciones activas de compra/venta
+* Procesar la transacción informada por un usuario
 * Test Coverage: 91.5 %
+* Usuarios de prueba en import.sql file
 
 NOTES (funcionalidad que falta):
 * 2 tests E2E. Testing integral de 2 controllers (end-to-end)
 * Informar al usuario el volumen operado de cripto activos entre dos fechas
-* Sin migraciones cuando levanta la aplicación.
