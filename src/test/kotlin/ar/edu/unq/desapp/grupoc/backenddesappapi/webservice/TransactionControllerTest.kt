@@ -1,10 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import PriceOutsidePriceBandException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.*
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.OperationType
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
@@ -274,6 +271,21 @@ class TransactionControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `when a transaction is processed but user is not authorized to perform the action, then it fails`() {
+        every { transactionService.processTransaction(any(), any(), any()) }.throws(
+            UnauthorizedUserForAction(EXISTING_USER, TransactionAction.ACCEPT, CREATED_OPERATION_ID)
+        )
+
+        mockMvc.perform(
+            put("/transaction/{id}", CREATED_OPERATION_ID.toString())
+                .header("user", EXISTING_USER)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.ACCEPT)))
+        )
+            .andExpect(status().isUnprocessableEntity)
     }
 
     @Test

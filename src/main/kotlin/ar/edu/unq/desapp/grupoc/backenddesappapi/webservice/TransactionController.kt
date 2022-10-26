@@ -1,10 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import PriceOutsidePriceBandException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.*
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -84,6 +81,8 @@ class TransactionController {
             throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
         } catch (e: TransactionNotFoundException) {
             throw HTTPClientException(e.message!!, HttpStatus.NOT_FOUND)
+        } catch (e: UnauthorizedUserForAction) {
+            throw HTTPClientException(e.message!!, HttpStatus.UNPROCESSABLE_ENTITY)
         }
     }
 
