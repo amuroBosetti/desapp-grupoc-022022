@@ -1,8 +1,8 @@
 ====== RELEASE NOTE  ==========
 ---------------------------------------------------------------------
-TAG 1.0.0
+TAG 1.0.1
 ---------------------------------------------------------------------
-NEW FEATURES:
+FEATURES:
 * Configuración en GitHubActions del job Build
 * SonarCloud: https://sonarcloud.io/project/overview?id=amuroBosetti_desapp-grupoc-022022
 * Heroku deploy: https://desapp-grupoc-022022.herokuapp.com
@@ -11,6 +11,21 @@ NEW FEATURES:
 * Registro de usuarios: Endpoint create, persistencia en H2
 * Test Coverage: 94.4 %
 
-NOTES (ej: funcionalidad que falta, alguna consideración especial):
+---------------------------------------------------------------------
+TAG 1.0.2
+---------------------------------------------------------------------
+Core:
+* Estado de build verde
+* HSQLDB para persistir datos (opcion H2)
 
-KNOWN ISSUES (ej: funcionalidad que saben que están funcionando diferente, algún error conocido en la funcionalidad terminada, etc):
+FEATURES:
+*	Listar cotizacion de criptoactivos
+*	Permitir que un usuario exprese su intención de compra/venta
+*	Construir un listado donde se muestran las intenciones activas de compra/venta
+*	Procesar la transacción informada por un usuario
+* Test Coverage: 91.5 %
+
+NOTES (funcionalidad que falta):
+* 2 tests E2E. Testing integral de 2 controllers (end-to-end)
+* Informar al usuario el volumen operado de cripto activos entre dos fechas
+* Sin migraciones cuando levanta la aplicación.
