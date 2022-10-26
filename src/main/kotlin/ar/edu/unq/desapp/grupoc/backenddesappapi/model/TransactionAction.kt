@@ -31,7 +31,7 @@ enum class TransactionAction {
         }
 
         override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
-            transaction.operationType == OperationType.BUY && transaction.firstUser != user
+            transaction.operationType == OperationType.BUY && transaction.firstUser != user || transaction.operationType == OperationType.SELL && transaction.firstUser == user
     },
     CONFIRM_TRANSFER_RECEPTION {
         override fun processWith(
@@ -61,7 +61,7 @@ enum class TransactionAction {
 
         override fun usersAreNotValidForAction(transaction: Transaction, user: BrokerUser): Boolean =
             transaction.operationType == OperationType.SELL && transaction.firstUser != user
-                 || transaction.operationType == OperationType.BUY && transaction.secondUser != user
+                    || transaction.operationType == OperationType.BUY && transaction.secondUser != user
     },
     CONFIRM_CRYPTO_TRANSFER_RECEPTION {
         override fun processWith(
@@ -95,6 +95,6 @@ enum class TransactionAction {
     abstract fun usersAreNotValidForAction(
         transaction: Transaction,
         user: BrokerUser
-    ) : Boolean
+    ): Boolean
 
 }

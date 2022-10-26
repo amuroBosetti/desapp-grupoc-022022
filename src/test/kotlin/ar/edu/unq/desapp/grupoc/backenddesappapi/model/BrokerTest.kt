@@ -362,6 +362,16 @@ class BrokerTest {
         }
 
         @Test
+        fun `when the same user tries to inform transfer has been made, then it fails and the transaction is still active`() {
+            assertThatThrownBy { broker.processTransaction(transaction, user, aPrice, TransactionAction.INFORM_TRANSFER) }
+                .hasMessage("User ${user.email} is not authorized to perform action INFORM_TRANSFER on transaction ${transaction.id}")
+                .isInstanceOf(UnauthorizedUserForAction::class.java)
+
+            val informedTransaction = broker.findTransactionsOf(user).first()
+            assertThat(informedTransaction.status).isEqualTo(TransactionStatus.ACTIVE)
+        }
+
+        @Test
         fun `when another user informs transfer has been completed, then the transaction is waiting confirmation`() {
             broker.processTransaction(transaction, anotherUser, aPrice, TransactionAction.INFORM_TRANSFER)
 
