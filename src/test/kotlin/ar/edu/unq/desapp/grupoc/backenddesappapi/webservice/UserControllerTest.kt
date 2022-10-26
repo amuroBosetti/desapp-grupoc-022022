@@ -17,11 +17,11 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-private const val userId = 123L
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class UserControllerTest {
+
+    private val userId = 123L
 
     @Autowired
     lateinit var mockMvc : MockMvc
@@ -66,7 +66,7 @@ class UserControllerTest {
             mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(userCreationJSON))
                 .andExpect(status().isBadRequest)
                 .andReturn().response.contentAsString
-        assertThat(errorMessage).contains("Field password", "must not be blank")
+        assertThat(errorMessage).contains("Field password must not be blank")
     }
 
 
@@ -159,7 +159,6 @@ class UserControllerTest {
         assertThat(responseDTO).usingRecursiveComparison().ignoringFields("userId", "password").isEqualTo(userCreationPayload)
         assertThat(responseDTO.userId).isEqualTo(userId)
         assertThat(responseDTO.name).isNotNull
-
     }
 
 
