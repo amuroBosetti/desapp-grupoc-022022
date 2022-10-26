@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
@@ -192,6 +193,25 @@ class TransactionControllerTest {
                 .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         )
             .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        assertThat(returnValue).isEqualTo(exceptionMessage)
+    }
+
+    @Test
+    fun `when a transaction is created but intended price is outside price band, then it fails`() {
+        val exceptionMessage = "Cannot express a transaction intent with a price 5 higher than the latest quotation"
+        every { transactionService.createTransaction(any(), any()) }.throws(
+            (PriceOutsidePriceBandException(exceptionMessage))
+        )
+
+        val returnValue = mockMvc.perform(
+            post("/transaction")
+                .header("user", EXISTING_USER)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jacksonObjectMapper().writeValueAsString(validPayload()))
+        )
+            .andExpect(status().isUnprocessableEntity)
             .andReturn().response.contentAsString
 
         assertThat(returnValue).isEqualTo(exceptionMessage)

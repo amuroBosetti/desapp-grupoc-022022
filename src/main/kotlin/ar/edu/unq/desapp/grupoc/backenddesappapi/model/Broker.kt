@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
@@ -100,10 +101,10 @@ class Broker(
     private fun checkQuotationWithinRange(intendedPrice: Double, cryptoSymbol: String) {
         val tickerPrice = quotationsService.getTokenPrice(cryptoSymbol).price.toDouble()
         if (priceDifferenceIsHigherThan(percentage, intendedPrice, tickerPrice) && intendedPrice > tickerPrice) {
-            throw RuntimeException("Cannot express a transaction intent with a price 5 higher than the latest quotation")
+            throw PriceOutsidePriceBandException("Cannot express a transaction intent with a price 5 higher than the latest quotation")
         }
         if (priceDifferenceIsHigherThan(percentage, intendedPrice, tickerPrice) && intendedPrice < tickerPrice) {
-            throw RuntimeException("Cannot express a transaction intent with a price 5 lower than the latest quotation")
+            throw PriceOutsidePriceBandException("Cannot express a transaction intent with a price 5 lower than the latest quotation")
         }
     }
 

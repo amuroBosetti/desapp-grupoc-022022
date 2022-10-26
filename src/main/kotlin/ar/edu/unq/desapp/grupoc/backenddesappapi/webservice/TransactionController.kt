@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionWithSameUserInBothSidesException
@@ -56,6 +57,8 @@ class TransactionController {
             ResponseEntity(HttpStatus.UNAUTHORIZED)
         } catch (e: UnexpectedUserInformationException) {
             throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
+        } catch (e: PriceOutsidePriceBandException) {
+            throw HTTPClientException(e.message!!, HttpStatus.UNPROCESSABLE_ENTITY)
         }
     }
 
