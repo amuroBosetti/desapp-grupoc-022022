@@ -23,7 +23,6 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
-	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -48,6 +47,10 @@ dependencies {
 	testImplementation(kotlin("test"))
 	testImplementation("io.mockk:mockk:1.12.8")
 	testImplementation("com.ninja-squad:springmockk:3.1.1")
+
+	//Security
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("com.auth0:java-jwt:4.2.1")
 }
 
 springBoot{
