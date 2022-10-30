@@ -36,6 +36,7 @@ dependencies {
 	//OpenAPI integration
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
 	implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
+	testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.h2database:h2")
