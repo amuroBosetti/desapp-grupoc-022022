@@ -9,14 +9,20 @@ class Transaction(
     @ManyToOne
     val firstUser: BrokerUser,
     val operationType: OperationType,
+    //Might be -+ 5 % different than its quotation at that moment, it's what was paid
     val intendedPrice: Double,
     val symbol: String,
     val quantity: Int,
     var walletId: String? = null,
-    var cvu: String? = null
+    var cvu: String? = null,
+    // USD to ARS official coversion rate
+    var usdToArs: Double? = null,
+    // This is nominals quantity * price in USD
+    var amountInUSD: Double? = null,
+    // This is USD * USD to ARS official conversion rate
+    var amountInARS: Double? = null
 ) {
-
-    val createadAt: Instant = Instant.now() //TODO esto deberia crearlo la base de datos
+    val createadAt: Instant = Instant.now() //TODO: esto deberia crearlo la base de datos
     @ManyToOne
     var secondUser: BrokerUser? = null
     var quotation: Double? = null

@@ -12,6 +12,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepositor
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture.Companion.A_WALLET_ID
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TradedVolumeDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
@@ -25,12 +26,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.jdbc.Sql
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 private const val VALID_USER = "validuser@gmail.com"
 private const val ANOTHER_VALID_USER = "anothervaliduser@gmail.com"
-
 private const val SYMBOL = "BNBUSDT"
 
 @SpringBootTest
@@ -52,10 +53,8 @@ class TransactionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        //val user = UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345678", 5L)
         val user = userRepository.save(UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345578"))
         userRepository.save(UserFixture.aUser(ANOTHER_VALID_USER, "8506368711100060517136", "82345678"))
-        //userRepository.save(user)
 
         val tickerPrice = TickerPrice()
         tickerPrice.price = mockPrice
@@ -313,6 +312,26 @@ class TransactionServiceTest {
         val processedTransaction = transactionRepository.findById(transaction.operationId).get()
         assertThat(processedTransaction.status).isEqualTo(TransactionStatus.WAITING_CRYPTO_CONFIRMATION)
     }
+
+    @Transactional
+    @Test
+    fun `when asked the traded volume in dollars in the same day and there are none then nothing was traded`(){
+        val tradedVolumeDTO : TradedVolumeDTO = transactionService.getTradedVolume("20221001", "20221001")
+
+        assertThat(tradedVolumeDTO.amountInUSD).isEqualTo(0.00)
+        assertThat(tradedVolumeDTO.amountInARS).isEqualTo(0.00)
+    }
+
+    @Transactional
+    @Test
+    fun `when asked the traded volume in dollars in the same day and there is one transa`(){
+        val tradedVolumeDTO : TradedVolumeDTO = transactionService.getTradedVolume("20221001", "20221001")
+
+        assertThat(tradedVolumeDTO.amountInUSD).isEqualTo(0.00)
+        assertThat(tradedVolumeDTO.amountInARS).isEqualTo(0.00)
+    }
+
+
 
     private fun validCreationPayload(operationType: OperationType, walletId: String? = null, cvu: String? = null) = TransactionCreationDTO(
         SYMBOL,

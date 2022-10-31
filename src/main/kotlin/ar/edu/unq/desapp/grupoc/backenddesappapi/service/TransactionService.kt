@@ -8,6 +8,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TradedVolumeDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationResponseDTO
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,7 +32,7 @@ class TransactionService {
 
     @PostConstruct
     fun init() {
-        broker = Broker(5.0, transactionRepository, quotationsService)
+        broker = Broker(5.0, transactionRepository, quotationsService, DollarAPI())
     }
 
     fun createTransaction(userEmail: String, transactionCreationDTO: TransactionCreationDTO):
@@ -68,6 +69,11 @@ class TransactionService {
         }
         val latestQuotation = quotationsService.getTokenPrice(transaction.symbol).price.toDouble()
         return broker.processTransaction(transaction, user, latestQuotation, action)
+    }
+
+    fun getTradedVolume(startingDate: String, endingDate: String): TradedVolumeDTO {
+        //transactionRepository.findBetweenDates(startingDate, endingDate)
+        return TradedVolumeDTO(startingDate=startingDate, endingDate=endingDate, amountInUSD = 0.00, amountInARS = 0.00)
     }
 
 }

@@ -13,4 +13,5 @@ import java.util.*
 interface TransactionRepository : CrudRepository<Transaction, UUID> {
     fun findByFirstUser(user: BrokerUser): List<Transaction>
     fun findAllByStatus(status: TransactionStatus): List<Transaction>
+    //fun findBetweenDates(startingDate: String, endingDate: String)
 }

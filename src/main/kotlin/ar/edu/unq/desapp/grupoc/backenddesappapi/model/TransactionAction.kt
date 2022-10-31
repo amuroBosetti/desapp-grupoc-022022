@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
 
 enum class TransactionAction {
     ACCEPT {
@@ -83,7 +84,7 @@ enum class TransactionAction {
         transaction: Transaction,
         user: BrokerUser,
         latestQuotation: Double,
-        broker: Broker
+        broker: Broker,
     ): Transaction
 
     protected fun validateUsers(transaction: Transaction, user: BrokerUser) {

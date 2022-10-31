@@ -92,4 +92,15 @@ class TransactionController {
         return ResponseEntity(transactionList, HttpStatus.OK)
     }
 
+    @Operation(
+        summary = "Retrieves the amount of volume traded between 2 dates",
+        description = "This endpoint retrives the total amount of volume traded in USD and ARS"
+    )
+
+    @RequestMapping("/traded/volume", method = [RequestMethod.GET])
+    fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeDTO): ResponseEntity<TradedVolumeDTO> {
+        transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)
+        return ResponseEntity(TradedVolumeDTO("",  "", 0.00, 0.00), HttpStatus.OK)
+    }
+
 }

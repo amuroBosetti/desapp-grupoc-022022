@@ -3,6 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import java.time.Instant
 import java.util.*
@@ -11,7 +12,8 @@ import java.util.*
 class Broker(
     var percentage: Double,
     private val transactionRepository: TransactionRepository,
-    val quotationsService: QuotationsService
+    val quotationsService: QuotationsService,
+    val dollarApi: DollarAPI
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
@@ -39,11 +41,17 @@ class Broker(
     }
 
     private fun validateCreationParameters(operationType: OperationType, walletId: String?, cvu: String?) {
-        if (operationType == OperationType.BUY && walletId == null || operationType == OperationType.SELL && cvu == null) {
-            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "walletId" else "cvu"} null")
+        if (isBuying(operationType) && walletId == null || isSelling(operationType) && cvu == null) {
+            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (isBuying(
+                    operationType
+                )
+            ) "walletId" else "cvu"} null")
         }
-        if (operationType == OperationType.BUY && cvu != null || operationType == OperationType.SELL && walletId != null){
-            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (operationType == OperationType.BUY) "cvu" else "walletId"}")
+        if (isBuying(operationType) && cvu != null || isSelling(operationType) && walletId != null){
+            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (isBuying(
+                    operationType
+                )
+            ) "cvu" else "walletId"}")
         }
     }
 
@@ -59,8 +67,18 @@ class Broker(
         transaction: Transaction, user: BrokerUser, latestQuotation: Double, action: TransactionAction
     ): Transaction {
         val processedTransaction = action.processWith(transaction, user, latestQuotation, this)
+        if (isBuying(processedTransaction.operationType)) {
+            processedTransaction.usdToArs = dollarApi.getARSOfficialRate().venta.toDouble()
+        }else{
+            processedTransaction.usdToArs = dollarApi.getARSOfficialRate().compra.toDouble()
+        }
+        processedTransaction.amountInUSD = transaction.quantity * transaction.intendedPrice
+        processedTransaction.amountInARS = processedTransaction.amountInUSD!! * processedTransaction.usdToArs!!
         return transactionRepository.save(processedTransaction)
     }
+
+    private fun isBuying(operationType: OperationType) =
+        operationType == OperationType.BUY
 
     internal fun confirmCryptoTransferReception(transactionId: UUID): Transaction {
         val transaction = findTransactionById(transactionId)
@@ -87,11 +105,14 @@ class Broker(
     }
 
     internal fun informTransfer(transaction: Transaction, user: BrokerUser): Transaction {
-        if (transaction.operationType == OperationType.SELL) {
+        if (isSelling(transaction.operationType)) {
             transaction.secondUser = user
         }
         return transaction.informTransfer()
     }
+
+    private fun isSelling(operationType: OperationType) =
+        operationType == OperationType.SELL
 
     fun cancelTransaction(transactionId: UUID, cancellingUser: BrokerUser) {
         findTransactionById(transactionId).cancel()

@@ -1,14 +1,16 @@
-package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice;
+package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 
-
+@Tag(name = "Quotations", description = "Quotations service")
 @Controller
 class QuotationsController {
 
@@ -36,6 +38,17 @@ class QuotationsController {
     fun getAllTokenPrices(): ResponseEntity<List<TickerPriceDTO>> {
         return try {
             ResponseEntity(quotationsService.getAllTokenPrices(), HttpStatus.OK)
+        } catch (e: Exception){
+            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    @GetMapping
+    @RequestMapping("/dolar")
+    @ResponseBody
+    fun getDolar(): ResponseEntity<ExchangeRateDTO> {
+        return try {
+            ResponseEntity(DollarAPI().getARSOfficialRate(), HttpStatus.OK)
         } catch (e: Exception){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 @Service
 class QuotationsService {
 
+    //Todo: Move and fetch from DB
     val tickers = mutableListOf("ALICEUSDT",
         "MATICUSDT",
         "AXSUSDT",

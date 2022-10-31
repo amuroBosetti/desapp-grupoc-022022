@@ -4,6 +4,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAc
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
 import com.binance.api.client.BinanceApiRestClient
@@ -56,7 +57,7 @@ class BrokerTest {
     @BeforeEach
     internal fun setUp() {
         userRepository.saveAll(listOf(user, anotherUser))
-        broker = Broker(percentage, transactionRepository, quotationsService)
+        broker = Broker(percentage, transactionRepository, quotationsService, DollarAPI())
 
         val tickerPrice = TickerPrice()
         tickerPrice.price = mockPrice.toString()
