@@ -3,9 +3,11 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.repository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionStatus
+import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.util.*
 
 @Repository
@@ -13,5 +15,11 @@ import java.util.*
 interface TransactionRepository : CrudRepository<Transaction, UUID> {
     fun findByFirstUser(user: BrokerUser): List<Transaction>
     fun findAllByStatus(status: TransactionStatus): List<Transaction>
-    //fun findBetweenDates(startingDate: String, endingDate: String)
+
+    @Query()
+    fun findAllByStatusAndCompletionDateBetween(
+        status: TransactionStatus,
+        startingDate: LocalDate,
+        endingDate: LocalDate
+    ): List<Transaction>
 }

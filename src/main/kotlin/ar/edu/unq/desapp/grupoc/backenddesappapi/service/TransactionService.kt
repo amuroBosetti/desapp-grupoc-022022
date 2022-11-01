@@ -2,17 +2,15 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.NotRegisteredUserException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.TransactionNotFoundException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Broker
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Transaction
-import ar.edu.unq.desapp.grupoc.backenddesappapi.model.TransactionAction
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.*
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
-import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TradedVolumeDTO
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TradedVolumeResponseDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationResponseDTO
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.util.*
 import javax.annotation.PostConstruct
 
@@ -71,9 +69,15 @@ class TransactionService {
         return broker.processTransaction(transaction, user, latestQuotation, action)
     }
 
-    fun getTradedVolume(startingDate: String, endingDate: String): TradedVolumeDTO {
-        //transactionRepository.findBetweenDates(startingDate, endingDate)
-        return TradedVolumeDTO(startingDate=startingDate, endingDate=endingDate, amountInUSD = 0.00, amountInARS = 0.00)
+    fun getTradedVolume(startingDate: LocalDate, endingDate: LocalDate): TradedVolumeResponseDTO {
+        val transactions = transactionRepository.findAllByStatusAndCompletionDateBetween(
+            TransactionStatus.COMPLETED,
+            startingDate,
+            endingDate
+        )
+        val amountInARS = transactions.sumOf { it.amountInARS!! }
+        val amountInUSD = transactions.sumOf { it.amountInUSD!! }
+        return TradedVolumeResponseDTO(startingDate.toString(), endingDate.toString(), amountInUSD, amountInARS)
     }
 
 }

@@ -1,6 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
+import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 import javax.persistence.*
 
@@ -18,21 +20,24 @@ class Transaction(
     // USD to ARS official coversion rate
     var usdToArs: Double? = null,
     // This is nominals quantity * price in USD
-    var amountInUSD: Double? = null,
+    var amountInUSD: Double? = 0.00,
     // This is USD * USD to ARS official conversion rate
-    var amountInARS: Double? = null
+    var amountInARS: Double? = 0.00
 ) {
-    val createadAt: Instant = Instant.now() //TODO: esto deberia crearlo la base de datos
+    @CreationTimestamp
+    val createadAt = Instant.now() //TODO: esto deberia crearlo la base de datos
+
     @ManyToOne
     var secondUser: BrokerUser? = null
     var quotation: Double? = null
     var status: TransactionStatus = TransactionStatus.ACTIVE
+    var completionDate: LocalDate? = null
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: UUID? = null
 
-    fun accept(secondUser: BrokerUser, latestQuotation: Double) : Transaction {
+    fun accept(secondUser: BrokerUser, latestQuotation: Double): Transaction {
         status = status.accept()
         if (this.secondUser == null) this.secondUser = secondUser
         if (this.quotation == null) this.quotation = latestQuotation

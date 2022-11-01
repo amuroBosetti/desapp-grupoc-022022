@@ -6,6 +6,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepositor
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 
@@ -42,16 +43,24 @@ class Broker(
 
     private fun validateCreationParameters(operationType: OperationType, walletId: String?, cvu: String?) {
         if (isBuying(operationType) && walletId == null || isSelling(operationType) && cvu == null) {
-            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (isBuying(
-                    operationType
-                )
-            ) "walletId" else "cvu"} null")
+            throw UnexpectedUserInformationException(
+                "Cannot create a $operationType transaction with ${
+                    if (isBuying(
+                            operationType
+                        )
+                    ) "walletId" else "cvu"
+                } null"
+            )
         }
-        if (isBuying(operationType) && cvu != null || isSelling(operationType) && walletId != null){
-            throw UnexpectedUserInformationException("Cannot create a $operationType transaction with ${if (isBuying(
-                    operationType
-                )
-            ) "cvu" else "walletId"}")
+        if (isBuying(operationType) && cvu != null || isSelling(operationType) && walletId != null) {
+            throw UnexpectedUserInformationException(
+                "Cannot create a $operationType transaction with ${
+                    if (isBuying(
+                            operationType
+                        )
+                    ) "cvu" else "walletId"
+                }"
+            )
         }
     }
 
@@ -69,11 +78,12 @@ class Broker(
         val processedTransaction = action.processWith(transaction, user, latestQuotation, this)
         if (isBuying(processedTransaction.operationType)) {
             processedTransaction.usdToArs = dollarApi.getARSOfficialRate().venta.toDouble()
-        }else{
+        } else {
             processedTransaction.usdToArs = dollarApi.getARSOfficialRate().compra.toDouble()
         }
         processedTransaction.amountInUSD = transaction.quantity * transaction.intendedPrice
         processedTransaction.amountInARS = processedTransaction.amountInUSD!! * processedTransaction.usdToArs!!
+        processedTransaction.completionDate = LocalDate.now()
         return transactionRepository.save(processedTransaction)
     }
 

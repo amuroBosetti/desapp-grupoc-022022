@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service
 class QuotationsService {
 
     //Todo: Move and fetch from DB
-    val tickers = mutableListOf("ALICEUSDT",
+    val tickers = mutableListOf(
+        "ALICEUSDT",
         "MATICUSDT",
         "AXSUSDT",
         "AAVEUSDT",
@@ -31,11 +32,12 @@ class QuotationsService {
     lateinit var client: BinanceApiRestClient
 
     fun getTokenPrice(ticker: String?): TickerPriceDTO {
-    try {
+        try {
             return TickerPriceDTO(
                 symbol = client.getPrice(ticker).symbol,
-                price = client.getPrice(ticker).price)
-        } catch (e: BinanceApiException){
+                price = client.getPrice(ticker).price
+            )
+        } catch (e: BinanceApiException) {
             throw CouldNotFindTokenException()
         }
     }
