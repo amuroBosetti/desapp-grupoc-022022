@@ -12,13 +12,13 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepositor
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.UserRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture
 import ar.edu.unq.desapp.grupoc.backenddesappapi.utils.TransactionFixture.Companion.A_WALLET_ID
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TradedVolumeResponseDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TransactionCreationDTO
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -56,12 +56,14 @@ class TransactionServiceTest {
     @Autowired
     private lateinit var transactionRepository: TransactionRepository
 
-    val localDate: LocalDate = mockk()
+    @MockkBean
+    lateinit var dollarAPI: DollarAPI
+
+    @MockkBean
+    lateinit var clock: Clock
 
     @BeforeEach
     fun setUp() {
-        val instantExpected = "2022-10-01T09:15:00Z"
-        val clock = Clock.fixed(Instant.parse(instantExpected), ZoneId.of("UTC"))
         val user = userRepository.save(UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345578"))
         userRepository.save(UserFixture.aUser(ANOTHER_VALID_USER, "8506368711100060517136", "82345678"))
 
@@ -70,6 +72,9 @@ class TransactionServiceTest {
         tickerPrice.symbol = mockSymbol
         every { client.getPrice(mockSymbol) } returns tickerPrice
         every { client.getPrice("") } throws RuntimeException("Could not get the token price")
+        every { clock.instant() } returns Instant.parse("2022-10-01T09:15:00Z")
+        every { clock.zone } returns ZoneId.of("GMT-3")
+        every { dollarAPI.getARSOfficialRate() } returns ExchangeRateDTO("150", "154", "2022-10-01")
     }
 
     @Nested
@@ -368,11 +373,47 @@ class TransactionServiceTest {
     @Transactional
     @Test
     fun `when asked the traded volume in dollars in the same day and there are none then nothing was traded`() {
-        val date = LocalDate.parse("2022-10-01")
+        val date = "2022-10-01"
         val tradedVolumeDTO: TradedVolumeResponseDTO = transactionService.getTradedVolume(date, date)
 
         assertThat(tradedVolumeDTO.amountInUSD).isEqualTo(0.00)
         assertThat(tradedVolumeDTO.amountInARS).isEqualTo(0.00)
+    }
+
+    @Transactional
+    @Test
+    fun `when asked the traded volume in dollars in the same day and there is one transaction then that was traded`() {
+        val date = "2022-10-01"
+
+        val transaction = transactionService.createTransaction(
+            VALID_USER, validCreationPayload(
+                OperationType.SELL, cvu = TransactionFixture.A_CVU
+            )
+        )
+        transactionService.processTransaction(
+            transaction.operationId,
+            ANOTHER_VALID_USER,
+            TransactionAction.INFORM_TRANSFER
+        )
+        transactionService.processTransaction(
+            transaction.operationId,
+            VALID_USER,
+            TransactionAction.CONFIRM_TRANSFER_RECEPTION
+        )
+        transactionService.processTransaction(
+            transaction.operationId,
+            VALID_USER,
+            TransactionAction.INFORM_CRYPTO_TRANSFER
+        )
+        transactionService.processTransaction(
+            transaction.operationId,
+            ANOTHER_VALID_USER,
+            TransactionAction.CONFIRM_CRYPTO_TRANSFER_RECEPTION
+        )
+        val tradedVolumeDTO: TradedVolumeResponseDTO = transactionService.getTradedVolume(date, date)
+
+        assertThat(tradedVolumeDTO.amountInUSD).isEqualTo(75.00)
+        assertThat(tradedVolumeDTO.amountInARS).isEqualTo(11616.74)
     }
 
     private fun validCreationPayload(operationType: OperationType, walletId: String? = null, cvu: String? = null) =

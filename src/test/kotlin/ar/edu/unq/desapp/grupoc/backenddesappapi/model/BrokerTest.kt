@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.util.stream.Stream
 
 @SpringBootTest
@@ -42,6 +43,9 @@ class BrokerTest {
     @MockkBean
     lateinit var client: BinanceApiRestClient
 
+    @Autowired
+    lateinit var clock: Clock
+
     private val user = UserFixture.aUser()
     private val anotherUser = UserFixture.aUser("pepito@gmail.com", "9506568711100060517136", "12345679")
     private lateinit var broker: Broker
@@ -57,7 +61,7 @@ class BrokerTest {
     @BeforeEach
     internal fun setUp() {
         userRepository.saveAll(listOf(user, anotherUser))
-        broker = Broker(percentage, transactionRepository, quotationsService, DollarAPI())
+        broker = Broker(percentage, transactionRepository, quotationsService, DollarAPI(), clock)
 
         val tickerPrice = TickerPrice()
         tickerPrice.price = mockPrice.toString()

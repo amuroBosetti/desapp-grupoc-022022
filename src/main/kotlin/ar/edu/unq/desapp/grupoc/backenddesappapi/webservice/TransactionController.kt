@@ -2,6 +2,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.*
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.InvaliDateFormat
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -12,8 +13,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.validation.Valid
 
@@ -94,16 +93,21 @@ class TransactionController {
         return ResponseEntity(transactionList, HttpStatus.OK)
     }
 
+
+    @ExceptionHandler(InvaliDateFormat::class)
+    fun handleException(exception: InvaliDateFormat): ResponseEntity<ErrorDTO> {
+        return ResponseEntity(ErrorDTO(exception.message!!, InvaliDateFormat::class.java.simpleName
+        ), HttpStatus.BAD_REQUEST)
+    }
+
     @Operation(
         summary = "Retrieves the amount of volume traded between 2 dates",
-        description = "This endpoint retrives the total amount of volume traded in USD and ARS"
+        description = "This endpoint receives 2 dates and retrieves the total amount of transactions volume traded in USD and ARS"
     )
-
     @RequestMapping("/traded/volume", method = [RequestMethod.GET])
     fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeRequestDTO): ResponseEntity<TradedVolumeResponseDTO> {
-        val startDate = LocalDate.parse(tradedVolumeDTO.startingDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val endDate = LocalDate.parse(tradedVolumeDTO.endingDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val tradedVolumeDTO: TradedVolumeResponseDTO = transactionService.getTradedVolume(startDate, endDate)
+        val tradedVolumeDTO: TradedVolumeResponseDTO =
+            transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)
         return ResponseEntity(tradedVolumeDTO, HttpStatus.OK)
     }
 

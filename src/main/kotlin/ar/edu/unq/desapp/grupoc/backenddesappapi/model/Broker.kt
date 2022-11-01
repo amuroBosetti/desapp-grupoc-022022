@@ -5,16 +5,20 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInforma
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 
 class Broker(
     var percentage: Double,
     private val transactionRepository: TransactionRepository,
     val quotationsService: QuotationsService,
-    val dollarApi: DollarAPI
+    val dollarApi: DollarAPI,
+    val clock: Clock
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
 
@@ -76,14 +80,6 @@ class Broker(
         transaction: Transaction, user: BrokerUser, latestQuotation: Double, action: TransactionAction
     ): Transaction {
         val processedTransaction = action.processWith(transaction, user, latestQuotation, this)
-        if (isBuying(processedTransaction.operationType)) {
-            processedTransaction.usdToArs = dollarApi.getARSOfficialRate().venta.toDouble()
-        } else {
-            processedTransaction.usdToArs = dollarApi.getARSOfficialRate().compra.toDouble()
-        }
-        processedTransaction.amountInUSD = transaction.quantity * transaction.intendedPrice
-        processedTransaction.amountInARS = processedTransaction.amountInUSD!! * processedTransaction.usdToArs!!
-        processedTransaction.completionDate = LocalDate.now()
         return transactionRepository.save(processedTransaction)
     }
 
@@ -94,7 +90,21 @@ class Broker(
         val transaction = findTransactionById(transactionId)
         transaction.confirmCryptoTransferReception()
         scoreTracker.trackTransferReception(transaction, Instant.now())
+        if (isBuying(transaction.operationType)) {
+            transaction.usdToArs = dollarApi.getARSOfficialRate().venta.toDouble()
+        } else {
+            transaction.usdToArs = dollarApi.getARSOfficialRate().compra.toDouble()
+        }
+        transaction.amountInUSD = roundOff(transaction.quantity * transaction.intendedPrice)
+        transaction.amountInARS = roundOff(transaction.amountInUSD!! * transaction.usdToArs!!)
+        transaction.completionDate = LocalDate.now(clock)
         return transaction
+    }
+
+    private fun roundOff(amount: Double): Double {
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.DOWN
+        return df.format(amount).toDouble()
     }
 
     internal fun confirmTransferReception(transactionId: UUID): Transaction {
