@@ -29,13 +29,12 @@ class JWTProvider {
             .withSubject(authAttempt.userEmail)
             .withIssuedAt(Instant.now())
             .withExpiresAt(Instant.now().plusSeconds(anHour))
-            .sign(Algorithm.HMAC256(secret))
+            .sign(getAlgorithm())
     }
 
     fun isValid(token: String): Boolean {
         return try {
-            val verifier = getVerifier()
-            verifier.verify(token)
+            getVerifier().verify(token)
             true
         } catch (e: Exception) {
             false
@@ -44,17 +43,18 @@ class JWTProvider {
 
     fun getEmailFromToken(token: String): String {
         try {
-            val verifier = getVerifier()
-            return verifier.verify(token).subject
+            return getVerifier().verify(token).subject
         } catch (e: SignatureVerificationException) {
             throw BadCredentialsException("Bad token")
         }
     }
 
     private fun getVerifier(): JWTVerifier {
-        val algorithm = Algorithm.HMAC256(secret)
+        val algorithm = getAlgorithm()
         return JWT.require(algorithm)
             .build()
     }
+
+    private fun getAlgorithm(): Algorithm? = Algorithm.HMAC256(secret)
 
 }
