@@ -12,6 +12,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.validation.Valid
 
@@ -98,9 +100,11 @@ class TransactionController {
     )
 
     @RequestMapping("/traded/volume", method = [RequestMethod.GET])
-    fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeDTO): ResponseEntity<TradedVolumeDTO> {
-        transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)
-        return ResponseEntity(TradedVolumeDTO("",  "", 0.00, 0.00), HttpStatus.OK)
+    fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeRequestDTO): ResponseEntity<TradedVolumeResponseDTO> {
+        val startDate = LocalDate.parse(tradedVolumeDTO.startingDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val endDate = LocalDate.parse(tradedVolumeDTO.endingDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val tradedVolumeDTO: TradedVolumeResponseDTO = transactionService.getTradedVolume(startDate, endDate)
+        return ResponseEntity(tradedVolumeDTO, HttpStatus.OK)
     }
 
 }

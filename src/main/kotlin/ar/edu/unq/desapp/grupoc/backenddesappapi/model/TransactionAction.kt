@@ -1,7 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnauthorizedUserForAction
-import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
 
 enum class TransactionAction {
     ACCEPT {
