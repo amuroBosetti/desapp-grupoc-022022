@@ -6,12 +6,12 @@ import org.springframework.web.client.RestTemplate
 
 
 @Service
-class DollarAPI {
+class USDAPI {
 
     val BASE_URL = "https://api-dolar-argentina.herokuapp.com/api/dolaroficial"
 
     fun getARSOfficialRate(): ExchangeRateDTO {
-        var restTemplate = RestTemplate()
+        val restTemplate = RestTemplate()
         val responseEntity = restTemplate.getForEntity(
             BASE_URL, ExchangeRateDTO::class.java
         )

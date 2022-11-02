@@ -3,7 +3,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.UnexpectedUserInformationException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.TransactionRepository
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.USDAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import java.time.Clock
 import java.time.Instant
@@ -17,7 +17,7 @@ class Broker(
     var percentage: Double,
     private val transactionRepository: TransactionRepository,
     val quotationsService: QuotationsService,
-    val dollarAPI: DollarAPI,
+    val USDAPI: USDAPI,
     val clock: Clock
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
@@ -91,9 +91,9 @@ class Broker(
         transaction.confirmCryptoTransferReception()
         scoreTracker.trackTransferReception(transaction, Instant.now())
         if (isBuying(transaction.operationType)) {
-            transaction.usdToArs = dollarAPI.getARSOfficialRate().venta.toDouble()
+            transaction.usdToArs = USDAPI.getARSOfficialRate().venta.toDouble()
         } else {
-            transaction.usdToArs = dollarAPI.getARSOfficialRate().compra.toDouble()
+            transaction.usdToArs = USDAPI.getARSOfficialRate().compra.toDouble()
         }
         transaction.amountInUSD = roundOff(transaction.quantity * transaction.intendedPrice)
         transaction.amountInARS = roundOff(transaction.amountInUSD!! * transaction.usdToArs!!)

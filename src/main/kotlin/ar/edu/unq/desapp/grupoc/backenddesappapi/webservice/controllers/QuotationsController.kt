@@ -1,7 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.USDAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
@@ -48,7 +48,7 @@ class QuotationsController {
     @ResponseBody
     fun getDolar(): ResponseEntity<ExchangeRateDTO> {
         return try {
-            ResponseEntity(DollarAPI().getARSOfficialRate(), HttpStatus.OK)
+            ResponseEntity(USDAPI().getARSOfficialRate(), HttpStatus.OK)
         } catch (e: Exception) {
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }
