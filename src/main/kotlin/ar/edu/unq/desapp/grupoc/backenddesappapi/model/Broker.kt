@@ -17,7 +17,7 @@ class Broker(
     var percentage: Double,
     private val transactionRepository: TransactionRepository,
     val quotationsService: QuotationsService,
-    val dollarApi: DollarAPI,
+    val dollarAPI: DollarAPI,
     val clock: Clock
 ) {
     private val scoreTracker: ScoreTracker = ScoreTracker()
@@ -91,9 +91,9 @@ class Broker(
         transaction.confirmCryptoTransferReception()
         scoreTracker.trackTransferReception(transaction, Instant.now())
         if (isBuying(transaction.operationType)) {
-            transaction.usdToArs = dollarApi.getARSOfficialRate().venta.toDouble()
+            transaction.usdToArs = dollarAPI.getARSOfficialRate().venta.toDouble()
         } else {
-            transaction.usdToArs = dollarApi.getARSOfficialRate().compra.toDouble()
+            transaction.usdToArs = dollarAPI.getARSOfficialRate().compra.toDouble()
         }
         transaction.amountInUSD = roundOff(transaction.quantity * transaction.intendedPrice)
         transaction.amountInARS = roundOff(transaction.amountInUSD!! * transaction.usdToArs!!)

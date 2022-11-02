@@ -74,7 +74,7 @@ class TransactionServiceTest {
         every { client.getPrice("") } throws RuntimeException("Could not get the token price")
         every { clock.instant() } returns Instant.parse("2022-10-01T09:15:00Z")
         every { clock.zone } returns ZoneId.of("GMT-3")
-        every { dollarAPI.getARSOfficialRate() } returns ExchangeRateDTO("150", "154", "2022-10-01")
+        every { dollarAPI.getARSOfficialRate() } returns ExchangeRateDTO("150", "155", "2022-10-01")
     }
 
     @Nested
@@ -413,7 +413,7 @@ class TransactionServiceTest {
         val tradedVolumeDTO: TradedVolumeResponseDTO = transactionService.getTradedVolume(date, date)
 
         assertThat(tradedVolumeDTO.amountInUSD).isEqualTo(75.00)
-        assertThat(tradedVolumeDTO.amountInARS).isEqualTo(11616.74)
+        assertThat(tradedVolumeDTO.amountInARS).isEqualTo(11250.0)
     }
 
     private fun validCreationPayload(operationType: OperationType, walletId: String? = null, cvu: String? = null) =

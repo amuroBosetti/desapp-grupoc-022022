@@ -34,9 +34,12 @@ class TransactionService {
     @Autowired
     lateinit var clock: Clock
 
+    @Autowired
+    lateinit var dollarAPI: DollarAPI
+
     @PostConstruct
     fun init() {
-        broker = Broker(5.0, transactionRepository, quotationsService, DollarAPI(), clock)
+        broker = Broker(5.0, transactionRepository, quotationsService, dollarAPI, clock)
     }
 
     fun createTransaction(userEmail: String, transactionCreationDTO: TransactionCreationDTO):

@@ -15,9 +15,7 @@ class DollarAPI {
         val responseEntity = restTemplate.getForEntity(
             BASE_URL, ExchangeRateDTO::class.java
         )
-        print(responseEntity)
         val exchangeRates = responseEntity.body!!
-        print(exchangeRates.toString())
         return exchangeRates
     }
 
