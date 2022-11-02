@@ -25,7 +25,8 @@ FEATURES:
 * Procesar la transacción informada por un usuario
 * Test Coverage: 91.5 %
 * Usuarios de prueba en import.sql file
-
-NOTES (funcionalidad que falta):
 * 2 tests E2E. Testing integral de 2 controllers (end-to-end)
 * Informar al usuario el volumen operado de cripto activos entre dos fechas
+
+NOTES (funcionalidad que falta):
+
