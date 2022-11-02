@@ -1,7 +1,9 @@
-package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
+package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.BrokerUser
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.UserService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.UserCreationDTO
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.UserCreationResponseDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired

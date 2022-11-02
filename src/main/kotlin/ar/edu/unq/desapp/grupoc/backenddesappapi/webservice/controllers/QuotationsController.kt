@@ -1,8 +1,10 @@
-package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
+package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.DollarAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,16 +26,14 @@ class QuotationsController {
         return ResponseEntity(exception.message, HttpStatus.BAD_REQUEST)
     }
 
-    @GetMapping
-    @RequestMapping("/token/price/{ticker}")
+    @RequestMapping("/token/price/{ticker}", method = [RequestMethod.GET])
     @Operation(summary = "Get a token price")
     @ResponseBody
     fun getTokenPrice(@PathVariable ticker: String): ResponseEntity<TickerPriceDTO> {
         return ResponseEntity(quotationsService.getTokenPrice(ticker), HttpStatus.OK)
     }
 
-    @GetMapping
-    @RequestMapping("/token/prices")
+    @RequestMapping("/token/prices", method = [RequestMethod.GET])
     @Operation(summary = "Get all listed token prices")
     @ResponseBody
     fun getAllTokenPrices(): ResponseEntity<List<TickerPriceDTO>> {
@@ -44,8 +44,7 @@ class QuotationsController {
         }
     }
 
-    @GetMapping
-    @RequestMapping("/dolar")
+    @RequestMapping("/dolar", method = [RequestMethod.GET])
     @ResponseBody
     fun getDolar(): ResponseEntity<ExchangeRateDTO> {
         return try {

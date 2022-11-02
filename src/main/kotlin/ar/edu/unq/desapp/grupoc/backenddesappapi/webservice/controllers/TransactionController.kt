@@ -1,9 +1,10 @@
-package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
+package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.*
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.InvaliDateFormat
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.*
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
