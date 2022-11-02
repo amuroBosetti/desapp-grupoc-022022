@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class BackendDesappApiApplication
 
 fun main(args: Array<String>) {
-	runApplication<BackendDesappApiApplication>(*args)
+    runApplication<BackendDesappApiApplication>(*args)
 }

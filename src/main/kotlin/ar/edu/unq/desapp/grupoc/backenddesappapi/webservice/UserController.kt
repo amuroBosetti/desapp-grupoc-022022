@@ -9,11 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
-import org.springframework.web.bind.annotation.ExceptionHandler
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.*
 import javax.validation.Valid
 
 @Tag(name = "Users", description = "User registration service")
@@ -25,17 +21,17 @@ class UserController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleException(exception: MethodArgumentNotValidException) : ResponseEntity<String>{
+    fun handleException(exception: MethodArgumentNotValidException): ResponseEntity<String> {
         val messages = exception.fieldErrors.map {
             "Field ${it.field} ${it.defaultMessage}"
         }
-        return ResponseEntity(messages.toString(),HttpStatus.BAD_REQUEST)
+        return ResponseEntity(messages.toString(), HttpStatus.BAD_REQUEST)
     }
 
     @Operation(summary = "Register a new user")
     @RequestMapping("/user", method = [RequestMethod.POST])
-    fun createUser(@Valid @RequestBody userCreationDTO : UserCreationDTO) : ResponseEntity<UserCreationResponseDTO> {
-        val createdUser : BrokerUser = userService.createUser(userCreationDTO)
+    fun createUser(@Valid @RequestBody userCreationDTO: UserCreationDTO): ResponseEntity<UserCreationResponseDTO> {
+        val createdUser: BrokerUser = userService.createUser(userCreationDTO)
 
         val response = UserCreationResponseDTO(
             createdUser.name,

@@ -2,6 +2,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
 import PriceOutsidePriceBandException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.*
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.InvaliDateFormat
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -90,6 +91,24 @@ class TransactionController {
     fun getActiveTransactions(): ResponseEntity<List<ActiveTransactionDTO>> {
         val transactionList = transactionService.getActiveTransactions().map { ActiveTransactionDTO.from(it) }
         return ResponseEntity(transactionList, HttpStatus.OK)
+    }
+
+
+    @ExceptionHandler(InvaliDateFormat::class)
+    fun handleException(exception: InvaliDateFormat): ResponseEntity<ErrorDTO> {
+        return ResponseEntity(ErrorDTO(exception.message!!, InvaliDateFormat::class.java.simpleName
+        ), HttpStatus.BAD_REQUEST)
+    }
+
+    @Operation(
+        summary = "Retrieves the amount of volume traded between 2 dates",
+        description = "This endpoint receives 2 dates and retrieves the total amount of transactions volume traded in USD and ARS"
+    )
+    @RequestMapping("/traded/volume", method = [RequestMethod.GET])
+    fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeRequestDTO): ResponseEntity<TradedVolumeResponseDTO> {
+        val tradedVolumeDTO: TradedVolumeResponseDTO =
+            transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)
+        return ResponseEntity(tradedVolumeDTO, HttpStatus.OK)
     }
 
 }

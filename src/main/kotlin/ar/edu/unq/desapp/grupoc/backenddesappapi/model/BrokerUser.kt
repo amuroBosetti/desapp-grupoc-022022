@@ -1,9 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.model
 
 import javax.persistence.*
-import javax.persistence.GenerationType.*
+import javax.persistence.GenerationType.IDENTITY
 import javax.validation.constraints.Size
-import kotlin.jvm.Transient
 
 @Entity
 @Table
@@ -44,7 +43,7 @@ class BrokerUser(
     }
 
     private fun validateEmail(email: String) {
-        if (!EMAIL_REGEX.toRegex().matches(email)){
+        if (!EMAIL_REGEX.toRegex().matches(email)) {
             throw RuntimeException("Invalid email")
         }
     }
@@ -58,7 +57,7 @@ class BrokerUser(
     }
 
     fun subtractReputationPoints(amount: Double) {
-        if (reputationPoints < amount){
+        if (reputationPoints < amount) {
             reputationPoints = 0.0
         } else {
             reputationPoints -= amount

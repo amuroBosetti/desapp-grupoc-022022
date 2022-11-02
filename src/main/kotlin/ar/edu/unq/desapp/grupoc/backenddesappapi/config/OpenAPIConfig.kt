@@ -9,11 +9,13 @@ import org.springframework.context.annotation.Configuration
 class SwaggerConfig {
 
     @Bean
-    fun springOpenAPI() : OpenAPI {
+    fun springOpenAPI(): OpenAPI {
         return OpenAPI()
-                .info(Info().title("desapp-grupoc-022022 API")
-                .description("Grupo C - Mauro Bosetti | Ignacio Robledo")
-                .version("v1.0"))
+            .info(
+                Info().title("desapp-grupoc-022022 API")
+                    .description("Grupo C - Mauro Bosetti | Ignacio Robledo")
+                    .version("v1.0")
+            )
     }
 
 }

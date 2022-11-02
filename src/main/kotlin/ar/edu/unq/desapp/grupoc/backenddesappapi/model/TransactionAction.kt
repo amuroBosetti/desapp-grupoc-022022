@@ -83,7 +83,7 @@ enum class TransactionAction {
         transaction: Transaction,
         user: BrokerUser,
         latestQuotation: Double,
-        broker: Broker
+        broker: Broker,
     ): Transaction
 
     protected fun validateUsers(transaction: Transaction, user: BrokerUser) {
