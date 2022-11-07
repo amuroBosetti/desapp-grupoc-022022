@@ -26,6 +26,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis:2.7.5")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -33,6 +34,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-modules-java8:2.13.4")
 	implementation("co.oril:binance-api-client-java:1.0.3")
 	implementation("commons-validator:commons-validator:1.7")
+
 
 	//OpenAPI integration
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
