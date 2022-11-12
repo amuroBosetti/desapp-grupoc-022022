@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException
 @SpringBootTest
 internal class JWTProviderTest {
 
+    private val aPassword: String = "aguanteLaMasa1234"
     private val anEmail: String = "vicente.viloni@gmail.com"
 
     @Autowired
@@ -17,7 +18,7 @@ internal class JWTProviderTest {
 
     @Test
     fun `when a token is created, then it can be verified`() {
-        val authAttempt = UserAuthAttempt(anEmail)
+        val authAttempt = UserAuthAttempt(anEmail, aPassword)
 
         val createdToken = jwtProvider.createToken(authAttempt)
 
@@ -33,7 +34,7 @@ internal class JWTProviderTest {
 
     @Test
     fun `when a valid token is created, then the user email can be retrieved from it`() {
-        val authAttempt = UserAuthAttempt(anEmail)
+        val authAttempt = UserAuthAttempt(anEmail, aPassword)
 
         val createdToken = jwtProvider.createToken(authAttempt)
 
