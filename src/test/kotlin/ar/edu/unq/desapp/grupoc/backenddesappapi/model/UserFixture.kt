@@ -6,14 +6,15 @@ class UserFixture {
             email: String = "alarak@gmail.com",
             cvu: String = "9506368711100060517136",
             walletId: String = "12345678",
-            userId: Long? = null
+            userId: Long? = null,
+            password: String = "eluber123"
         ): BrokerUser {
             val brokerUser = BrokerUser(
                 email,
                 "Alarak",
                 "Greycastle",
                 "Calle Falsa 123, Beleforth",
-                "eluber123",
+                password,
                 cvu,
                 walletId
             )
@@ -22,7 +23,7 @@ class UserFixture {
         }
 
         fun aUserWithReputation(reputationScore: Double): BrokerUser {
-            val user = aUser(cvu = "9506368711100060517136", walletId = "12345678", userId = 5L)
+            val user = aUser(cvu = "9506368711100060517136", walletId = "12345678", userId = 5L, password = "eluber123")
             user.increaseReputationPoints(reputationScore)
             return user
         }

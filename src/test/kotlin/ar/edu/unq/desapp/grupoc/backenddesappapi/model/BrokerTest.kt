@@ -46,8 +46,13 @@ class BrokerTest {
     @Autowired
     lateinit var clock: Clock
 
-    private val user = UserFixture.aUser()
-    private val anotherUser = UserFixture.aUser("pepito@gmail.com", "9506568711100060517136", "12345679")
+    private val user = UserFixture.aUser(password = "eluber123")
+    private val anotherUser = UserFixture.aUser(
+        "pepito@gmail.com",
+        "9506568711100060517136",
+        "12345679",
+        password = "eluber123"
+    )
     private lateinit var broker: Broker
     private val aPrice = 1.00
     private val higherIntendedPrice = 1.05

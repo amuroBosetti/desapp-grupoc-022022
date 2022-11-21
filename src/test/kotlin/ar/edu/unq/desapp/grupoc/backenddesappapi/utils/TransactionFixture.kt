@@ -13,7 +13,7 @@ class TransactionFixture {
 
         fun aTransaction(userEmail: String, status: TransactionStatus = TransactionStatus.ACTIVE): Transaction {
             val transaction = Transaction(
-                UserFixture.aUser(userEmail, userId = 5L),
+                UserFixture.aUser(userEmail, userId = 5L, password = "eluber123"),
                 OperationType.BUY,
                 10.0,
                 "ALICEUSDT",
