@@ -16,6 +16,8 @@ class WebMvcConfig : WebMvcConfigurer{
             .excludePathPatterns("/**/token/**")
             .excludePathPatterns("/**/user/**")
             .excludePathPatterns("/**/login/**")
+            .excludePathPatterns("/**/swagger-ui/**")
+            .excludePathPatterns("/**/api-docs/**")
     }
 
 }
