@@ -72,7 +72,7 @@ class TransactionControllerTest {
         mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", "noxExistingUserToken")
+                .header("authorization", "noxExistingUserToken")
                 .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         ).andExpect(status().isUnauthorized)
     }
@@ -93,7 +93,7 @@ class TransactionControllerTest {
         mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content("{}")
         ).andExpect(status().isBadRequest)
     }
@@ -107,7 +107,7 @@ class TransactionControllerTest {
         mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(invalidBody)
         ).andExpect(status().isBadRequest)
     }
@@ -119,7 +119,7 @@ class TransactionControllerTest {
         val response = mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(jacksonObjectMapper().writeValueAsString(payload))
         ).andExpect(status().isCreated)
             .andReturn().response.contentAsString
@@ -159,7 +159,7 @@ class TransactionControllerTest {
         val response = mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(payload)
         ).andExpect(status().isCreated)
             .andReturn().response.contentAsString
@@ -187,7 +187,7 @@ class TransactionControllerTest {
         val response = mockMvc.perform(
             post("/transaction")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(payload)
         ).andExpect(status().isCreated)
             .andReturn().response.contentAsString
@@ -206,7 +206,7 @@ class TransactionControllerTest {
 
         val returnValue = mockMvc.perform(
             post("/transaction")
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         )
@@ -226,7 +226,7 @@ class TransactionControllerTest {
 
         val returnValue = mockMvc.perform(
             post("/transaction")
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(validPayload()))
         )
@@ -244,7 +244,7 @@ class TransactionControllerTest {
         val response = mockMvc.perform(
             get("/transaction/active")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
         )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
@@ -262,7 +262,7 @@ class TransactionControllerTest {
         val response = mockMvc.perform(
             get("/transaction/active")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
         )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
@@ -294,7 +294,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isBadRequest)
@@ -309,7 +309,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.ACCEPT)))
         )
@@ -327,7 +327,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.INFORM_TRANSFER)))
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -347,7 +347,7 @@ class TransactionControllerTest {
 
         val stringResponse = mockMvc.perform(
             put("/transaction/{id}", CREATED_OPERATION_ID.toString())
-                .header("Authorization", authTokenForUser(EXISTING_USER))
+                .header("authorization", authTokenForUser(EXISTING_USER))
                 .content(jacksonObjectMapper().writeValueAsString(TransactionUpdateRequestDTO(TransactionAction.INFORM_TRANSFER)))
                 .contentType(MediaType.APPLICATION_JSON)
         )
