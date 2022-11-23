@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import javax.servlet.http.HttpSession
 import javax.validation.Valid
 
 @Tag(name = "Transactions", description = "Transaction service")
@@ -44,15 +46,21 @@ class TransactionController {
         return ResponseEntity(exception.returnMessage, exception.status)
     }
 
+    @ExceptionHandler(InvaliDateFormat::class)
+    fun handleException(exception: InvaliDateFormat): ResponseEntity<ErrorDTO> {
+        return ResponseEntity(ErrorDTO(exception.message!!, InvaliDateFormat::class.java.simpleName
+        ), HttpStatus.BAD_REQUEST)
+    }
+
     @Operation(summary = "Create a new transaction")
     @RequestMapping("/transaction", method = [RequestMethod.POST])
     fun createTransaction(
-        @RequestHeader("user") userEmail: String,
-        @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO
+        @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO,
+        httpSession: HttpSession
     ): ResponseEntity<TransactionCreationResponseDTO> {
         return try {
-            ResponseEntity(transactionService.createTransaction(userEmail, transactionCreationDTO), HttpStatus.CREATED)
-        } catch (e: NotRegisteredUserException) {
+            ResponseEntity(transactionService.createTransaction(getUserEmail(httpSession), transactionCreationDTO), HttpStatus.CREATED)
+        } catch (e: BadCredentialsException) {
             ResponseEntity(HttpStatus.UNAUTHORIZED)
         } catch (e: UnexpectedUserInformationException) {
             throw HTTPClientException(e.message!!, HttpStatus.BAD_REQUEST)
@@ -68,14 +76,14 @@ class TransactionController {
     )
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     fun processTransaction(
-        @RequestHeader("user") userEmail: String,
         @PathVariable id: UUID,
-        @RequestBody updateRequest: TransactionUpdateRequestDTO
+        @RequestBody updateRequest: TransactionUpdateRequestDTO,
+        httpSession: HttpSession
     ): ResponseEntity<TransactionUpdateResponseDTO> {
         return try {
             val transaction = transactionService.processTransaction(
                 id,
-                userEmail,
+                getUserEmail(httpSession),
                 updateRequest.action
             )
             ResponseEntity(TransactionUpdateResponseDTO(transaction.status), HttpStatus.OK)
@@ -95,11 +103,7 @@ class TransactionController {
     }
 
 
-    @ExceptionHandler(InvaliDateFormat::class)
-    fun handleException(exception: InvaliDateFormat): ResponseEntity<ErrorDTO> {
-        return ResponseEntity(ErrorDTO(exception.message!!, InvaliDateFormat::class.java.simpleName
-        ), HttpStatus.BAD_REQUEST)
-    }
+    private fun getUserEmail(httpSession: HttpSession) = httpSession.getAttribute("user") as String
 
     @Operation(
         summary = "Retrieves the amount of volume traded between 2 dates",

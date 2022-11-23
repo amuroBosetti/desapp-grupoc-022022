@@ -63,8 +63,18 @@ class TransactionServiceTest {
 
     @BeforeEach
     fun setUp() {
-        val user = userRepository.save(UserFixture.aUser(VALID_USER, "9506368711100060517136", "12345578"))
-        userRepository.save(UserFixture.aUser(ANOTHER_VALID_USER, "8506368711100060517136", "82345678"))
+        userRepository.save(UserFixture.aUser(
+            VALID_USER,
+            "9506368711100060517136",
+            "12345578",
+            password = "eluber123"
+        ))
+        userRepository.save(UserFixture.aUser(
+            ANOTHER_VALID_USER,
+            "8506368711100060517136",
+            "82345678",
+            password = "eluber123"
+        ))
 
         val tickerPrice = TickerPrice()
         tickerPrice.price = mockPrice
@@ -242,7 +252,12 @@ class TransactionServiceTest {
         )
         transactionService.processTransaction(transaction.operationId, ANOTHER_VALID_USER, TransactionAction.ACCEPT)
         val thirdUser =
-            userRepository.save(UserFixture.aUser("thirduser@gmail.com", "8506368711100060514136", "82349678"))
+            userRepository.save(UserFixture.aUser(
+                "thirduser@gmail.com",
+                "8506368711100060514136",
+                "82349678",
+                password = "eluber123"
+            ))
 
         assertThatThrownBy {
             transactionService.processTransaction(
