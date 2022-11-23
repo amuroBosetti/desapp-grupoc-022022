@@ -24,7 +24,8 @@ class HighPerformanceQuotationsController {
     @Operation(summary = "Get all listed token prices, with a delay of 10 minutes at most")
     @ResponseBody
     @Cacheable(
-        value = ["priceCache"]
+        cacheNames = ["priceCache"],
+        key = "#root.method.name"
     )
     fun getAllTokenPrices(): ResponseEntity<List<TickerPriceDTO>> {
         return try {

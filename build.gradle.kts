@@ -36,6 +36,7 @@ dependencies {
 	//Caching
 	implementation("javax.cache:cache-api:1.1.1")
 	implementation("org.ehcache:ehcache:3.10.8")
+	implementation("com.googlecode.ehcache-spring-annotations:ehcache-spring-annotations:1.2.0")
 
 	//OpenAPI integration
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")

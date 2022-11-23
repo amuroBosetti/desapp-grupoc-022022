@@ -8,6 +8,7 @@ import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.CacheManager
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -19,6 +20,9 @@ class QuotationsController {
 
     @Autowired(required = true)
     lateinit var quotationsService: QuotationsService
+
+    @Autowired
+    lateinit var cacheManager: CacheManager
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(CouldNotFindTokenException::class)
