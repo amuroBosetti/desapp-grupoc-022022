@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class HighPerformanceQuotationsUpdateWorker {
+class QuotationsCacheUpdateWorker {
 
     @Autowired
     lateinit var highPerformanceQuotationsController : HighPerformanceQuotationsController
