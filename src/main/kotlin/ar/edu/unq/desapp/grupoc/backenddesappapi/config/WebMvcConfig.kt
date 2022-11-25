@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-class WebMvcConfig : WebMvcConfigurer{
+class WebMvcConfig : WebMvcConfigurer {
 
     @Autowired
     private lateinit var authInterceptor: AuthInterceptor

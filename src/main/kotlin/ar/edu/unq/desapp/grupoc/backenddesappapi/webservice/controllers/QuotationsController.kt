@@ -1,8 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.USDAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.USDAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
 import io.swagger.v3.oas.annotations.Operation

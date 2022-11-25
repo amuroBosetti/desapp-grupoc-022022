@@ -33,6 +33,11 @@ dependencies {
 	implementation("co.oril:binance-api-client-java:1.0.3")
 	implementation("commons-validator:commons-validator:1.7")
 
+	//Caching
+	implementation("javax.cache:cache-api:1.1.1")
+	implementation("org.ehcache:ehcache:3.10.8")
+	implementation("com.googlecode.ehcache-spring-annotations:ehcache-spring-annotations:1.2.0")
+
 	//OpenAPI integration
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.11")
 	implementation("org.springdoc:springdoc-openapi-kotlin:1.6.11")
