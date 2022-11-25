@@ -19,7 +19,7 @@ import javax.validation.Valid
 
 @Tag(name = "Users", description = "User registration service")
 @Controller
-class UserController {
+class UserController : HttpController() {
 
     @Autowired
     lateinit var userService: UserService

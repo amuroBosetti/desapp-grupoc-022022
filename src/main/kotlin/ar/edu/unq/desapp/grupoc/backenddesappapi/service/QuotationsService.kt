@@ -2,6 +2,7 @@ package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
 import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers.TransactionController
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.exception.BinanceApiException
 import org.springframework.beans.factory.annotation.Autowired

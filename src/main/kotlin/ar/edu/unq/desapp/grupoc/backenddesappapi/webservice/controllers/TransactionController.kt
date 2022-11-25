@@ -21,7 +21,7 @@ import javax.validation.Valid
 
 @Tag(name = "Transactions", description = "Transaction service")
 @Controller
-class TransactionController {
+class TransactionController : HttpController() {
 
     @Autowired
     lateinit var transactionService: TransactionService
