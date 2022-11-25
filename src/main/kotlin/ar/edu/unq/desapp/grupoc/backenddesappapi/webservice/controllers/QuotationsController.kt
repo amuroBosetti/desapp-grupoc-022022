@@ -1,10 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.service.USDAPI
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
-import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.ExchangeRateDTO
-import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,14 +27,14 @@ class QuotationsController {
     @RequestMapping("/token/price/{ticker}", method = [RequestMethod.GET])
     @Operation(summary = "Get a token price")
     @ResponseBody
-    fun getTokenPrice(@PathVariable ticker: String): ResponseEntity<TickerPriceDTO> {
+    fun getTokenPrice(@PathVariable ticker: String): ResponseEntity<Quotation> {
         return ResponseEntity(quotationsService.getTokenPrice(ticker), HttpStatus.OK)
     }
 
     @RequestMapping("/token/prices", method = [RequestMethod.GET])
     @Operation(summary = "Get all listed token prices")
     @ResponseBody
-    fun getAllTokenPrices(): ResponseEntity<List<TickerPriceDTO>> {
+    fun getAllTokenPrices(): ResponseEntity<List<Quotation>> {
         return try {
             ResponseEntity(quotationsService.getAllTokenPrices(), HttpStatus.OK)
         } catch (e: Exception) {
@@ -44,11 +42,25 @@ class QuotationsController {
         }
     }
 
-    @RequestMapping("/dolar", method = [RequestMethod.GET])
+    @RequestMapping("/token/prices/24hs/{ticker}", method = [RequestMethod.GET])
+    @Operation(summary = "Get all listed token prices")
     @ResponseBody
-    fun getDolar(): ResponseEntity<ExchangeRateDTO> {
+    fun get24HsToken(@PathVariable ticker: String): ResponseEntity<
+            List<Quotation>> {
         return try {
-            ResponseEntity(USDAPI().getARSOfficialRate(), HttpStatus.OK)
+            ResponseEntity(quotationsService.get24HsPrice(ticker), HttpStatus.OK)
+        } catch (e: Exception) {
+            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    @RequestMapping("/token/prices/24hs/all", method = [RequestMethod.GET])
+    @Operation(summary = "Get all listed token prices")
+    @ResponseBody
+    fun getAll24HsToken(): ResponseEntity<
+            List<Quotation>> {
+        return try {
+            ResponseEntity(quotationsService.getAllSavedTokenPrices(), HttpStatus.OK)
         } catch (e: Exception) {
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }
