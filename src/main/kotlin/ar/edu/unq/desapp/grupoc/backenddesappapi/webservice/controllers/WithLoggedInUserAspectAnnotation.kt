@@ -26,10 +26,7 @@ class WithLoggedInUserAspectAnnotation {
     }
 
     fun validateToken(): Boolean {
-        if (!hasToken()) {
-            return false
-        }
-        if (!jwtProvider.isValid(getToken())) {
+        if (!hasToken() || !jwtProvider.isValid(getToken())) {
             return false
         }
         context.session.setAttribute("user", jwtProvider.getEmailFromToken(getToken()))
