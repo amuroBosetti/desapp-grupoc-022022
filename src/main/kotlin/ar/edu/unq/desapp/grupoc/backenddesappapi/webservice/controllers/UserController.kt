@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -31,6 +32,12 @@ class UserController : HttpController() {
             "Field ${it.field} ${it.defaultMessage}"
         }
         return ResponseEntity(messages.toString(), HttpStatus.BAD_REQUEST)
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleException(exception: HttpMessageNotReadableException): ResponseEntity<String> {
+        return ResponseEntity("Bad request", HttpStatus.BAD_REQUEST)
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
