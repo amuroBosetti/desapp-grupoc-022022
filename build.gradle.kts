@@ -54,6 +54,9 @@ dependencies {
 	testImplementation("io.mockk:mockk:1.12.8")
 	testImplementation("com.ninja-squad:springmockk:3.1.1")
 
+	testImplementation("com.tngtech.archunit:archunit-junit5-api:1.0.1")
+    testImplementation("com.tngtech.archunit:archunit-junit5-engine:1.0.1")
+
 	//Security
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("com.auth0:java-jwt:4.2.1")

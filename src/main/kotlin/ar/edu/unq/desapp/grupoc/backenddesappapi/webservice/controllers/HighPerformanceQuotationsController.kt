@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 
 @Tag(name = "Quotations", description = "Quotations service")
 @Controller
-class HighPerformanceQuotationsController {
+class HighPerformanceQuotationsController : HttpController() {
 
     @Autowired(required = true)
     lateinit var quotationsService: QuotationsService
