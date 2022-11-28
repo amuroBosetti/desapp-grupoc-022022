@@ -52,8 +52,15 @@ class TransactionController : HttpController() {
         ), HttpStatus.BAD_REQUEST)
     }
 
+    @ExceptionHandler(BadCredentialsException::class)
+    fun handleException(exception: BadCredentialsException): ResponseEntity<ErrorDTO> {
+        return ResponseEntity(ErrorDTO("Bad credentials", "Bad credentials"
+        ), HttpStatus.UNAUTHORIZED)
+    }
+
     @Operation(summary = "Create a new transaction")
     @RequestMapping("/transaction", method = [RequestMethod.POST])
+    @WithLoggedUser
     fun createTransaction(
         @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO,
         httpSession: HttpSession
@@ -75,6 +82,7 @@ class TransactionController : HttpController() {
         description = "This endpoint is used to move a transaction from one status to the other, for example when a user has to inform that they have sent money to the other one"
     )
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
+    @WithLoggedUser
     fun processTransaction(
         @PathVariable id: UUID,
         @RequestBody updateRequest: TransactionUpdateRequestDTO,
@@ -97,6 +105,7 @@ class TransactionController : HttpController() {
     }
 
     @RequestMapping("/transaction/active", method = [RequestMethod.GET])
+    @WithLoggedUser
     fun getActiveTransactions(): ResponseEntity<List<ActiveTransactionDTO>> {
         val transactionList = transactionService.getActiveTransactions().map { ActiveTransactionDTO.from(it) }
         return ResponseEntity(transactionList, HttpStatus.OK)
@@ -110,6 +119,7 @@ class TransactionController : HttpController() {
         description = "This endpoint receives 2 dates and retrieves the total amount of transactions volume traded in USD and ARS"
     )
     @RequestMapping("/traded/volume", method = [RequestMethod.GET])
+    @WithLoggedUser
     fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeRequestDTO): ResponseEntity<TradedVolumeResponseDTO> {
         val tradedVolumeDTO: TradedVolumeResponseDTO =
             transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)
