@@ -1,5 +1,6 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.domain.market.TickerPrice
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -66,8 +67,8 @@ class HighPerformanceQuotationsControllerTest {
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andReturn().response.contentAsString
 
-        val responseDTO = jacksonObjectMapper().readerForListOf(TickerPriceDTO::class.java)
-            .readValue<List<TickerPriceDTO>>(response)
+        val responseDTO = jacksonObjectMapper().readerForListOf(Quotation::class.java)
+            .readValue<List<Quotation>>(response)
         assertThat(responseDTO).extracting("symbol").containsAll(tickers)
     }
 

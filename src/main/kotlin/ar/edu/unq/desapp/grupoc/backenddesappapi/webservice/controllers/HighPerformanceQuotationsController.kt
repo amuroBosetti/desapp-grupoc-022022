@@ -1,7 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
-import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.TickerPriceDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +27,7 @@ class HighPerformanceQuotationsController {
         cacheNames = ["priceCache"],
         key = "#root.method.name"
     )
-    fun getAllTokenPrices(): ResponseEntity<List<TickerPriceDTO>> {
+    fun getAllTokenPrices(): ResponseEntity<List<Quotation>> {
         return try {
             ResponseEntity(quotationsService.getAllTokenPrices(), HttpStatus.OK)
         } catch (e: Exception) {

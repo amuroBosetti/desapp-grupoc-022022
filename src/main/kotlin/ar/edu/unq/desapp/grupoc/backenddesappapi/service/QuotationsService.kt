@@ -1,8 +1,8 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
-import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.QuotationRepository
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
+import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.QuotationRepository
 import com.binance.api.client.BinanceApiRestClient
 import com.binance.api.client.exception.BinanceApiException
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ class QuotationsService {
     )
 
     @Autowired
-    private lateinit var quotationRepository: QuotationRepository
+    lateinit var quotationRepository: QuotationRepository
 
     @Autowired
     lateinit var client: BinanceApiRestClient
@@ -54,7 +54,7 @@ class QuotationsService {
         }
     }
 
-    @Scheduled(fixedRate = 600000)
+    @Scheduled(fixedRate = 60000)
     fun saveTokenPrices() {
         quotationRepository.saveAll(getAllTokenPrices())
     }
