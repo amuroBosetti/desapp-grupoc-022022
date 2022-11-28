@@ -8,7 +8,12 @@ import com.binance.api.client.exception.BinanceApiException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
+import kotlin.streams.toList
+
 
 @Service
 class QuotationsService {
@@ -61,14 +66,28 @@ class QuotationsService {
                 .filter { tickerPrice -> tickers.contains(tickerPrice.symbol) }
                 .map { tickerPrice ->
                     val q = Quotation(symbol = tickerPrice.symbol, price = tickerPrice.price, dateTime)
-                    quotationRepository.save(q)}
+                    quotationRepository.save(q)
+                }
         } catch (e: BinanceApiException) {
             throw CouldNotFindTokenException()
         }
     }
 
     fun get24HsPrice(symbol: String): List<Quotation> {
-        return quotationRepository.findBySymbolOrderByDateTimeDesc(symbol)
+        val now = Instant.now()
+        return quotationRepository.findBySymbolOrderByDateTimeDesc(symbol).stream().filter {
+            isWithinPrior24Hours(
+                LocalDateTime.parse(it.dateTime), now
+            )
+        }.toList()
+    }
+
+    fun isWithinPrior24Hours(aDateTime: LocalDateTime, now: Instant): Boolean {
+        val offset = ZoneOffset.UTC
+        val now = Instant.now()
+        return !aDateTime.toInstant(offset).isBefore(now.minus(24, ChronoUnit.HOURS))
+                &&
+                aDateTime.toInstant(offset).isBefore(now)
     }
 }
 
