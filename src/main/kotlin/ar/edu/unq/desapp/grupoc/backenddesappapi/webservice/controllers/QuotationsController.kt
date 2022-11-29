@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 
 @Tag(name = "Quotations", description = "Quotations service")
 @Controller
-class QuotationsController {
+class QuotationsController : HttpController() {
 
     @Autowired(required = true)
     lateinit var quotationsService: QuotationsService

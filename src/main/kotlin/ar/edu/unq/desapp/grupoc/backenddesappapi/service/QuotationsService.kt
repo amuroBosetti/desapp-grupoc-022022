@@ -1,6 +1,7 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.service
 
 import ar.edu.unq.desapp.grupoc.backenddesappapi.exception.CouldNotFindTokenException
+import ar.edu.unq.desapp.grupoc.backenddesappapi.webservice.controllers.TransactionController
 import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
 import ar.edu.unq.desapp.grupoc.backenddesappapi.repository.QuotationRepository
 import com.binance.api.client.BinanceApiRestClient
@@ -53,7 +54,7 @@ class QuotationsService(val clock: Clock) {
         }
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 600000)
     fun saveTokenPrices() {
         quotationRepository.saveAll(getAllTokenPrices())
     }
