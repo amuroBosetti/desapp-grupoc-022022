@@ -1,13 +1,17 @@
 package ar.edu.unq.desapp.grupoc.backenddesappapi.webservice
 
+import ar.edu.unq.desapp.grupoc.backenddesappapi.model.Quotation
 import ar.edu.unq.desapp.grupoc.backenddesappapi.service.QuotationsService
+import ar.edu.unq.desapp.grupoc.backenddesappapi.service.UserService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.time.Clock
 import org.springframework.boot.test.web.server.LocalServerPort
 
 
@@ -19,13 +23,15 @@ class E2ETest {
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
+    @Autowired
+    private lateinit var clock: Clock
 
     @Test
     fun `when the price of a token is requested then it retrieves it from binance`() {
         val symbol = "BNBUSDT"
         val response = restTemplate.getForObject(
             "http://localhost:" + port + "/token/price/${symbol}",
-            TickerPriceDTO::class.java
+            Quotation::class.java
         )
         assertThat(response.symbol).contains(symbol)
         assertThat(response.price).isNotNull()
@@ -37,9 +43,9 @@ class E2ETest {
             "http://localhost:$port/token/prices",
             String::class.java
         )
-        val responseDTO = jacksonObjectMapper().readerForListOf(TickerPriceDTO::class.java)
-            .readValue<List<TickerPriceDTO>>(response)
-        assertThat(responseDTO.map { it.symbol }.containsAll(QuotationsService().tickers)).isTrue
+        val responseDTO = jacksonObjectMapper().readerForListOf(Quotation::class.java)
+            .readValue<List<Quotation>>(response)
+        assertThat(responseDTO.map { it.symbol }.containsAll(QuotationsService(clock).tickers)).isTrue
         assertThat(responseDTO.map { it.price }.all { it.isNotBlank()}).isTrue
     }
 
