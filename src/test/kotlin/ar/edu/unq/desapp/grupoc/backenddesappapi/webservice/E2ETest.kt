@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.time.Clock
 
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -20,6 +21,8 @@ class E2ETest {
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
+    @Autowired
+    private lateinit var clock: Clock
 
     @Test
     fun `when the price of a token is requested then it retrieves it from binance`() {
@@ -40,7 +43,7 @@ class E2ETest {
         )
         val responseDTO = jacksonObjectMapper().readerForListOf(Quotation::class.java)
             .readValue<List<Quotation>>(response)
-        assertThat(responseDTO.map { it.symbol }.containsAll(QuotationsService().tickers)).isTrue
+        assertThat(responseDTO.map { it.symbol }.containsAll(QuotationsService(clock).tickers)).isTrue
         assertThat(responseDTO.map { it.price }.all { it.isNotBlank()}).isTrue
     }
 

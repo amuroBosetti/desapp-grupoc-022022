@@ -8,15 +8,14 @@ import com.binance.api.client.exception.BinanceApiException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.Instant
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 import kotlin.streams.toList
 
 
 @Service
-class QuotationsService {
+class QuotationsService(val clock: Clock) {
 
     //Todo: Move and fetch from DB
     val tickers = mutableListOf(
@@ -74,7 +73,7 @@ class QuotationsService {
     }
 
     fun get24HsPrice(symbol: String): List<Quotation> {
-        val now = Instant.now()
+        val now = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC)
         return quotationRepository.findBySymbolOrderByDateTimeDesc(symbol).stream().filter {
             isWithinPrior24Hours(
                 LocalDateTime.parse(it.dateTime), now
@@ -82,12 +81,10 @@ class QuotationsService {
         }.toList()
     }
 
-    fun isWithinPrior24Hours(aDateTime: LocalDateTime, now: Instant): Boolean {
-        val offset = ZoneOffset.UTC
-        val now = Instant.now()
-        return !aDateTime.toInstant(offset).isBefore(now.minus(24, ChronoUnit.HOURS))
+    fun isWithinPrior24Hours(aDateTime: LocalDateTime, now: LocalDateTime): Boolean {
+        return !aDateTime.isBefore(now.minusDays(1))
                 &&
-                aDateTime.toInstant(offset).isBefore(now)
+                (aDateTime.isBefore(now) || aDateTime.isEqual(now))
     }
 }
 
