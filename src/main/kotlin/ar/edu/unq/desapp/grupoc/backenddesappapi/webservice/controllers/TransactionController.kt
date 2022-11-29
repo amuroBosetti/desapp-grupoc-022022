@@ -61,6 +61,7 @@ class TransactionController : HttpController() {
     @Operation(summary = "Create a new transaction")
     @RequestMapping("/transaction", method = [RequestMethod.POST])
     @WithLoggedUser
+    @LogExecTime
     fun createTransaction(
         @RequestBody @Valid transactionCreationDTO: TransactionCreationDTO,
         httpSession: HttpSession
@@ -83,6 +84,7 @@ class TransactionController : HttpController() {
     )
     @RequestMapping("/transaction/{id}", method = [RequestMethod.PUT])
     @WithLoggedUser
+    @LogExecTime
     fun processTransaction(
         @PathVariable id: UUID,
         @RequestBody updateRequest: TransactionUpdateRequestDTO,
@@ -106,6 +108,7 @@ class TransactionController : HttpController() {
 
     @RequestMapping("/transaction/active", method = [RequestMethod.GET])
     @WithLoggedUser
+    @LogExecTime
     fun getActiveTransactions(): ResponseEntity<List<ActiveTransactionDTO>> {
         val transactionList = transactionService.getActiveTransactions().map { ActiveTransactionDTO.from(it) }
         return ResponseEntity(transactionList, HttpStatus.OK)
@@ -120,6 +123,7 @@ class TransactionController : HttpController() {
     )
     @RequestMapping("/traded/volume", method = [RequestMethod.GET])
     @WithLoggedUser
+    @LogExecTime
     fun getTradedVolume(@RequestBody tradedVolumeDTO: TradedVolumeRequestDTO): ResponseEntity<TradedVolumeResponseDTO> {
         val tradedVolumeDTO: TradedVolumeResponseDTO =
             transactionService.getTradedVolume(tradedVolumeDTO.startingDate, tradedVolumeDTO.endingDate)

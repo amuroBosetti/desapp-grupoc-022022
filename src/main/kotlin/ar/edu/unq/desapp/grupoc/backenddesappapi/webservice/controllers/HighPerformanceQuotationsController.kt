@@ -27,6 +27,7 @@ class HighPerformanceQuotationsController : HttpController() {
         cacheNames = ["priceCache"],
         key = "#root.method.name"
     )
+    @LogExecTime
     fun getAllTokenPrices(): ResponseEntity<List<Quotation>> {
         return try {
             ResponseEntity(quotationsService.getAllTokenPrices(), HttpStatus.OK)
