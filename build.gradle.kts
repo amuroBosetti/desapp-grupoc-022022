@@ -33,6 +33,10 @@ dependencies {
 	implementation("co.oril:binance-api-client-java:1.0.3")
 	implementation("commons-validator:commons-validator:1.7")
 
+	//Logging
+	implementation("org.apache.logging.log4j:log4j-api:2.19.0")
+	implementation("org.apache.logging.log4j:log4j-core:2.19.0")
+
 	//Caching
 	implementation("javax.cache:cache-api:1.1.1")
 	implementation("org.ehcache:ehcache:3.10.8")
