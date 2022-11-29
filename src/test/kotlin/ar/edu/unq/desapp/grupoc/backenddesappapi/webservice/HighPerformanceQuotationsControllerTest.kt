@@ -26,6 +26,7 @@ class HighPerformanceQuotationsControllerTest {
 
     @MockkBean
     lateinit var client: BinanceApiRestClient
+
     val mockPrice = "3.00"
     val mockSymbol = "ALICEUSDT"
 

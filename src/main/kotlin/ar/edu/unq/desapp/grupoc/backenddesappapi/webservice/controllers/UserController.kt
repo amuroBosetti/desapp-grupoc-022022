@@ -48,6 +48,7 @@ class UserController : HttpController() {
 
     @Operation(summary = "Register a new user")
     @RequestMapping("/user", method = [RequestMethod.POST])
+    @LogExecTime
     fun createUser(@Valid @RequestBody userCreationDTO: UserCreationDTO): ResponseEntity<UserCreationResponseDTO> {
         val createdUser: BrokerUser = userService.createUser(userCreationDTO)
 
@@ -66,6 +67,7 @@ class UserController : HttpController() {
 
     @Operation(summary = "Login")
     @RequestMapping("/login", method = [RequestMethod.POST])
+    @LogExecTime
     fun login(@Valid @RequestBody authAttempt: UserAuthAttempt) : ResponseEntity<TokenDTO> {
         val returnedToken : TokenDTO = userService.login(authAttempt)
 

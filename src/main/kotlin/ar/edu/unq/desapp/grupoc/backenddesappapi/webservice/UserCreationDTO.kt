@@ -28,5 +28,7 @@ class UserCreationDTO(
     @field:Size(min = 8, max = 8)
     val walletId: String
 ) {
-
+    override fun toString(): String {
+        return "UserCreationDTO(name='$name', surname='$surname', email='$email', address='$address', cvu='$cvu', walletId='$walletId')"
+    }
 }
