@@ -12,10 +12,9 @@ FEATURES:
 * Test Coverage: 94.4 %
 
 ---------------------------------------------------------------------
-TAG 1.0.2
+TAG 1.0.3
 ---------------------------------------------------------------------
 Core:
-* Estado de build verde
 * HSQLDB para persistir datos (opcion H2)
 
 FEATURES:
@@ -23,10 +22,20 @@ FEATURES:
 * Permitir que un usuario exprese su intención de compra/venta
 * Construir un listado donde se muestran las intenciones activas de compra/venta
 * Procesar la transacción informada por un usuario
-* Test Coverage: 91.5 %
 * Usuarios de prueba en import.sql file
 * 2 tests E2E. Testing integral de 2 controllers (end-to-end)
 * Informar al usuario el volumen operado de cripto activos entre dos fechas
 
-NOTES (funcionalidad que falta):
+TAG 1.0.4
+---------------------------------------------------------------------
+Core:
+* Estado de build verde
+* HSQLDB para persistir datos (opcion H2)
+
+FEATURES:
+* Tests de arquitectura
+* Auditoria de Web-Services: Loguear <timestamp,user,operación/metodo, parámetros, tiempoDeEjecicion> de los servicios publicados con Spring utilizando Log4j
+* Segurizar el acceso a la API (JWT)
+* Mostrar las cotizaciones de las últimas 24hs para un cripto activo dado
+* Listado de cotizaciones (alta performance - implementar cache)
 
